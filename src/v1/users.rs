@@ -70,6 +70,7 @@ mod tests {
     use super::*;
     use crate::user::User;
     use crate::{repository::MockRepository, user::CustomData};
+    use actix_web::body::MessageBody;
     use chrono::{NaiveDate, Utc};
 
     pub fn create_test_user(id: uuid::Uuid, name: String, birth_date_ymd: (i32, u32, u32)) -> User {
@@ -97,11 +98,8 @@ mod tests {
 
         let result = get(web::Path::from(user_id), web::Data::new(repo)).await;
 
-        let user = match result.body() {
-            actix_web::body::AnyBody::Bytes(x) => serde_json::from_slice::<'_, User>(x).ok(),
-            _ => None,
-        }
-        .unwrap();
+        let body = result.into_body().try_into_bytes().unwrap();
+        let user = serde_json::from_slice::<'_, User>(&body).ok().unwrap();
 
         assert_eq!(user.id, user_id);
         assert_eq!(user.name, user_name);
@@ -119,11 +117,8 @@ mod tests {
 
         let result = post(web::Json(new_user), web::Data::new(repo)).await;
 
-        let user = match result.body() {
-            actix_web::body::AnyBody::Bytes(x) => serde_json::from_slice::<'_, User>(x).ok(),
-            _ => None,
-        }
-        .unwrap();
+        let body = result.into_body().try_into_bytes().unwrap();
+        let user = serde_json::from_slice::<'_, User>(&body).ok().unwrap();
 
         assert_eq!(user.id, user_id);
         assert_eq!(user.name, user_name);
@@ -141,11 +136,8 @@ mod tests {
 
         let result = put(web::Json(new_user), web::Data::new(repo)).await;
 
-        let user = match result.body() {
-            actix_web::body::AnyBody::Bytes(x) => serde_json::from_slice::<'_, User>(x).ok(),
-            _ => None,
-        }
-        .unwrap();
+        let body = result.into_body().try_into_bytes().unwrap();
+        let user = serde_json::from_slice::<'_, User>(&body).ok().unwrap();
 
         assert_eq!(user.id, user_id);
         assert_eq!(user.name, user_name);
@@ -160,11 +152,8 @@ mod tests {
 
         let result = delete(web::Path::from(user_id), web::Data::new(repo)).await;
 
-        let id = match result.body() {
-            actix_web::body::AnyBody::Bytes(x) => std::str::from_utf8(x).ok(),
-            _ => None,
-        }
-        .unwrap();
+        let body = result.into_body().try_into_bytes().unwrap();
+        let id = std::str::from_utf8(&body).ok().unwrap();
 
         assert_eq!(id, user_id.to_string());
     }
