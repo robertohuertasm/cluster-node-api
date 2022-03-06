@@ -53,10 +53,7 @@ Content-Type: application/json
 GET http://localhost:8080/v1/node HTTP/1.1
 
 ### get nodes filtered by name
-GET http://localhost:8080/v1/nodes?name=node_1 HTTP/1.1
-
-### get nodes filtered by node name
-GET http://localhost:8080/v1/nodes?node_name=node_1 HTTP/1.1
+GET http://localhost:8080/v1/node?name=node HTTP/1.1
 
 ### get node
 GET http://localhost:8080/v1/node/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1

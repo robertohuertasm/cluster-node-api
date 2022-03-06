@@ -1,6 +1,6 @@
 use crate::domain::{
     node::{Node, NodeStatus},
-    repository::NodeRepository,
+    repository::{node_repository::NodeFilter, NodeRepository},
 };
 use actix_web::{
     web::{self, PathConfig},
@@ -40,8 +40,13 @@ struct NodePatchDTO {
 }
 
 #[instrument(skip(repo))]
-async fn get_all<R: NodeRepository>(repo: web::Data<R>) -> HttpResponse {
-    match repo.get_nodes().await {
+async fn get_all<R: NodeRepository>(
+    filter: Option<web::Query<NodeFilter>>,
+    repo: web::Data<R>,
+) -> HttpResponse {
+    let filter = filter.map(|f| f.into_inner());
+
+    match repo.get_nodes(filter).await {
         Ok(nodes) => HttpResponse::Ok().json(nodes),
         Err(_) => HttpResponse::NotFound().body("Not found"),
     }
@@ -118,21 +123,80 @@ mod tests {
     }
 
     #[actix_rt::test]
-    async fn get_all_works() {
+    async fn get_all_work_without_filter() {
         let test_node = create_test_node(uuid::Uuid::new_v4(), "NODE_NAME".to_string());
         let test_node_clone = test_node.clone();
 
         let mut repo = MockNodeRepository::default();
         repo.expect_get_nodes()
-            .returning(move || Ok(vec![test_node_clone.clone()]));
+            .returning(move |_filter| Ok(vec![test_node_clone.clone()]));
 
-        let result = get_all(web::Data::new(repo)).await;
+        let result = get_all(None, web::Data::new(repo)).await;
 
         let body = result.into_body().try_into_bytes().unwrap();
         let nodes = serde_json::from_slice::<'_, Vec<Node>>(&body).ok().unwrap();
 
         assert!(nodes.len() == 1);
         assert_eq!(nodes[0], test_node);
+    }
+
+    #[actix_rt::test]
+    async fn get_all_returns_filter_is_ok() {
+        let node_name = "NODE_NAME".to_string();
+        let test_node = create_test_node(uuid::Uuid::new_v4(), node_name.clone());
+        let test_node_clone = test_node.clone();
+
+        let mut repo = MockNodeRepository::default();
+        repo.expect_get_nodes()
+            .returning(move |filter| match filter {
+                Some(filter) if node_name.contains(&filter.name) => {
+                    Ok(vec![test_node_clone.clone()])
+                }
+                _ => Ok(vec![]),
+            });
+
+        let result = get_all(
+            Some(web::Query(NodeFilter {
+                name: "NODE".to_string(),
+            })),
+            web::Data::new(repo),
+        )
+        .await;
+
+        let body = result.into_body().try_into_bytes().unwrap();
+        let nodes = serde_json::from_slice::<'_, Vec<Node>>(&body).ok().unwrap();
+
+        assert!(nodes.len() == 1);
+        assert_eq!(nodes[0], test_node);
+    }
+
+    #[actix_rt::test]
+    async fn get_all_does_not_return_filter_is_not_ok() {
+        let node_name = "NODE_NAME".to_string();
+        let test_node = create_test_node(uuid::Uuid::new_v4(), node_name.clone());
+        let test_node_clone = test_node.clone();
+
+        let mut repo = MockNodeRepository::default();
+        repo.expect_get_nodes()
+            .returning(move |filter| match filter {
+                Some(filter) if node_name.contains(&filter.name) => {
+                    Ok(vec![test_node_clone.clone()])
+                }
+                _ => Ok(vec![]),
+            });
+
+        let result = get_all(
+            Some(web::Query(NodeFilter {
+                name: "other".to_string(),
+            })),
+            web::Data::new(repo),
+        )
+        .await;
+
+        let body = result.into_body().try_into_bytes().unwrap();
+        let nodes = serde_json::from_slice::<'_, Vec<Node>>(&body).ok().unwrap();
+
+        assert!(nodes.len() == 0);
     }
 
     #[actix_rt::test]

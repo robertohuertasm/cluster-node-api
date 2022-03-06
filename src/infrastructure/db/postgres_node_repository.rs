@@ -1,6 +1,6 @@
 use crate::domain::{
     node::Node,
-    repository::{NodeRepository, RepositoryError, RepositoryResult},
+    repository::{node_repository::NodeFilter, NodeRepository, RepositoryError, RepositoryResult},
 };
 use async_trait::async_trait;
 use chrono::Utc;
@@ -20,12 +20,25 @@ impl PostgresNodeRepository {
 #[async_trait]
 impl NodeRepository for PostgresNodeRepository {
     #[instrument(skip(self))]
-    async fn get_nodes(&self) -> RepositoryResult<Vec<Node>> {
-        let result = sqlx::query_as::<_, Node>(
-            "SELECT id, name, status, cluster_id, created_at, updated_at FROM nodes",
-        )
-        .fetch_all(&self.pool)
-        .await;
+    async fn get_nodes(&self, filter: Option<NodeFilter>) -> RepositoryResult<Vec<Node>> {
+        let query = if let Some(filter) = filter {
+            tracing::error!("FILTER {:?}", filter);
+            sqlx::query_as::<_, Node>(
+                r"
+                SELECT n.id, n.name, n.status, n.cluster_id, n.created_at, n.updated_at
+                FROM nodes n
+                JOIN clusters c on n.cluster_id = c.id
+                where n.name like $1 or c.name like $1;
+                ",
+            )
+            .bind(format!("%{}%", filter.name))
+        } else {
+            sqlx::query_as::<_, Node>(
+                "SELECT id, name, status, cluster_id, created_at, updated_at FROM nodes",
+            )
+        };
+
+        let result = query.fetch_all(&self.pool).await;
 
         result.map_err(|e| {
             tracing::error!("{:?}", e);

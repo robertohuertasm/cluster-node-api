@@ -1,6 +1,9 @@
 use crate::domain::{
     node::Node,
-    repository::{node_repository::NodeRepository, RepositoryError, RepositoryResult},
+    repository::{
+        node_repository::{NodeFilter, NodeRepository},
+        RepositoryError, RepositoryResult,
+    },
 };
 use async_trait::async_trait;
 use chrono::Utc;
@@ -23,7 +26,10 @@ impl Default for MemoryNodeRepository {
 #[async_trait]
 impl NodeRepository for MemoryNodeRepository {
     #[instrument(skip(self))]
-    async fn get_nodes(&self) -> RepositoryResult<Vec<Node>> {
+    async fn get_nodes(&self, _filter: Option<NodeFilter>) -> RepositoryResult<Vec<Node>> {
+        // TODO: implement filter would require a refactor on how we store things in memory.
+        // skipping filters for the time being as MemoryNodeRepository is not used and it's only for the sake of the example
+        // of how to build another implementation of the NodeRepository trait.
         let nodes = self.nodes.read()?;
         Ok(nodes.iter().cloned().collect())
     }
