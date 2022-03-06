@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-#[derive(Debug, Copy, Clone, Deserialize, Serialize, sqlx::Type)]
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, sqlx::Type, PartialEq, Eq)]
 #[sqlx(type_name = "node_status", rename_all = "lowercase")]
 pub enum NodeStatus {
     #[serde(rename = "poweron")]
@@ -14,7 +14,7 @@ pub enum NodeStatus {
     Rebooting,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, FromRow)]
+#[derive(Debug, Clone, Deserialize, Serialize, FromRow, PartialEq, Eq)]
 pub struct Node {
     pub id: Uuid,
     pub name: String,

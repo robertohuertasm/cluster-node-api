@@ -82,9 +82,8 @@ async fn delete<R: ClusterRepository>(
 #[cfg(test)]
 mod tests {
 
-    use crate::domain::repository::cluster_repository::MockClusterRepository;
-
     use super::*;
+    use crate::domain::repository::cluster_repository::MockClusterRepository;
     use actix_web::body::MessageBody;
     use chrono::Utc;
 
@@ -95,6 +94,26 @@ mod tests {
             created_at: Some(Utc::now()),
             updated_at: None,
         }
+    }
+
+    #[actix_rt::test]
+    async fn get_all_works() {
+        let test_cluster = create_test_cluster(uuid::Uuid::new_v4(), "CLUSTER_NAME".to_string());
+        let test_cluster_clone = test_cluster.clone();
+
+        let mut repo = MockClusterRepository::default();
+        repo.expect_get_clusters()
+            .returning(move || Ok(vec![test_cluster_clone.clone()]));
+
+        let result = get_all(web::Data::new(repo)).await;
+
+        let body = result.into_body().try_into_bytes().unwrap();
+        let clusters = serde_json::from_slice::<'_, Vec<Cluster>>(&body)
+            .ok()
+            .unwrap();
+
+        assert!(clusters.len() == 1);
+        assert_eq!(clusters[0], test_cluster);
     }
 
     #[actix_rt::test]

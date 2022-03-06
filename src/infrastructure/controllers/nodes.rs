@@ -118,6 +118,24 @@ mod tests {
     }
 
     #[actix_rt::test]
+    async fn get_all_works() {
+        let test_node = create_test_node(uuid::Uuid::new_v4(), "NODE_NAME".to_string());
+        let test_node_clone = test_node.clone();
+
+        let mut repo = MockNodeRepository::default();
+        repo.expect_get_nodes()
+            .returning(move || Ok(vec![test_node_clone.clone()]));
+
+        let result = get_all(web::Data::new(repo)).await;
+
+        let body = result.into_body().try_into_bytes().unwrap();
+        let nodes = serde_json::from_slice::<'_, Vec<Node>>(&body).ok().unwrap();
+
+        assert!(nodes.len() == 1);
+        assert_eq!(nodes[0], test_node);
+    }
+
+    #[actix_rt::test]
     async fn get_works() {
         let node_id = uuid::Uuid::new_v4();
         let node_name = "NODE_NAME";

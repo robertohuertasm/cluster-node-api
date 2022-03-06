@@ -11,29 +11,26 @@ pub fn service(cfg: &mut ServiceConfig) {
 
 #[instrument]
 async fn features() -> HttpResponse {
-    HttpResponse::Ok().body("WTF")
+    HttpResponse::Ok().json(vec!["Feature 1", "Feature 2"])
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{http::StatusCode, App};
+    use actix_web::{body::MessageBody, http::StatusCode, App};
 
     #[actix_rt::test]
-    async fn health_check_works() {
+    async fn features_works() {
         let res = features().await;
         assert!(res.status().is_success());
         assert_eq!(res.status(), StatusCode::OK);
-        let data = res
-            .headers()
-            .get("thread-id")
-            .map(|h| h.to_str().ok())
-            .flatten();
-        assert_eq!(data, Some("5"));
+        let body = res.into_body().try_into_bytes().unwrap();
+        let features = serde_json::from_slice::<'_, Vec<&str>>(&body).ok().unwrap();
+        assert_eq!(features, vec!["Feature 1", "Feature 2"]);
     }
 
     #[actix_rt::test]
-    async fn health_check_integration_works() {
+    async fn features_integration_works() {
         let app = App::new().configure(service);
         let mut app = actix_web::test::init_service(app).await;
         let req = actix_web::test::TestRequest::get()
@@ -42,11 +39,8 @@ mod tests {
         let res = actix_web::test::call_service(&mut app, req).await;
         assert!(res.status().is_success());
         assert_eq!(res.status(), StatusCode::OK);
-        let data = res
-            .headers()
-            .get("thread-id")
-            .map(|h| h.to_str().ok())
-            .flatten();
-        assert_eq!(data, Some("5"));
+        let body = res.into_body().try_into_bytes().unwrap();
+        let features = serde_json::from_slice::<'_, Vec<&str>>(&body).ok().unwrap();
+        assert_eq!(features, vec!["Feature 1", "Feature 2"]);
     }
 }
