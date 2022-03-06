@@ -5,10 +5,6 @@ mod infrastructure;
 use crate::infrastructure::db::{PostgresClusterRepository, PostgresNodeRepository};
 use actix_web::{middleware, web, App, HttpServer};
 use infrastructure::controllers;
-use std::sync::{
-    atomic::{AtomicU16, Ordering},
-    Arc,
-};
 use tracing_subscriber::EnvFilter;
 
 #[actix_web::main]
@@ -41,21 +37,17 @@ async fn main() -> std::io::Result<()> {
     let address = format!("127.0.0.1:{}", port);
     // building shared state
     tracing::debug!("Starting our server at {}", address);
-    let thread_counter = Arc::new(AtomicU16::new(1));
 
     // starting the server
     HttpServer::new(move || {
-        let thread_index = thread_counter.fetch_add(1, Ordering::SeqCst);
-        tracing::trace!("Starting thread {}", thread_index);
-        // starting the services
         App::new()
             .wrap(middleware::NormalizePath::trim())
-            .app_data(web::Data::new(thread_index))
             .app_data(cluster_repo.clone())
             .app_data(node_repo.clone())
             .configure(controllers::clusters::service::<PostgresClusterRepository>)
             .configure(controllers::nodes::service::<PostgresNodeRepository>)
             .configure(controllers::health::service)
+            .configure(controllers::features::service)
     })
     .bind(&address)
     .unwrap_or_else(|err| {

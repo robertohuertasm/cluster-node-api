@@ -1,2 +1,0 @@
-### health
-GET http://localhost:8080/health HTTP/1.1

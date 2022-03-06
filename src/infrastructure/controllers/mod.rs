@@ -1,6 +1,7 @@
 use tracing::instrument;
 
 pub mod clusters;
+pub mod features;
 pub mod health;
 pub mod nodes;
 
