@@ -1,10 +1,10 @@
-mod health;
-mod repository;
-mod user;
-mod v1;
+mod application;
+mod domain;
+mod infrastructure;
 
-use crate::repository::PostgresRepository;
+use crate::infrastructure::postgres_repository::PostgresRepository;
 use actix_web::{web, App, HttpServer};
+use infrastructure::controllers;
 use std::sync::{
     atomic::{AtomicU16, Ordering},
     Arc,
@@ -45,8 +45,8 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(web::Data::new(thread_index))
             .app_data(repo.clone())
-            .configure(v1::service::<PostgresRepository>)
-            .configure(health::service)
+            .configure(controllers::clusters::service::<PostgresRepository>)
+            .configure(controllers::health::service)
     })
     .bind(&address)
     .unwrap_or_else(|err| {
