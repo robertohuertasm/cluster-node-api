@@ -22,7 +22,7 @@ impl NodeRepository for PostgresNodeRepository {
     #[instrument(skip(self))]
     async fn get_nodes(&self) -> RepositoryResult<Vec<Node>> {
         let result = sqlx::query_as::<_, Node>(
-            "SELECT id, name, cluster_id, created_at, updated_at FROM nodes",
+            "SELECT id, name, status, cluster_id, created_at, updated_at FROM nodes",
         )
         .fetch_all(&self.pool)
         .await;
@@ -36,7 +36,7 @@ impl NodeRepository for PostgresNodeRepository {
     #[instrument(skip(self))]
     async fn get_node(&self, node_id: &uuid::Uuid) -> RepositoryResult<Node> {
         let result = sqlx::query_as::<_, Node>(
-            "SELECT id, name, cluster_id, created_at, updated_at FROM nodes WHERE id = $1",
+            "SELECT id, name, status, cluster_id, created_at, updated_at FROM nodes WHERE id = $1",
         )
         .bind(node_id)
         .fetch_one(&self.pool)
@@ -52,13 +52,14 @@ impl NodeRepository for PostgresNodeRepository {
     async fn create_node(&self, node: &Node) -> RepositoryResult<Node> {
         let result = sqlx::query_as::<_, Node>(
             r#"
-        INSERT INTO nodes (id, name, cluster_id)
-        VALUES ($1, $2, $3)
-        RETURNING id, name, cluster_id, created_at, updated_at
+        INSERT INTO nodes (id, name, status, cluster_id)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id, name, status, cluster_id, created_at, updated_at
         "#,
         )
         .bind(&node.id)
         .bind(&node.name)
+        .bind(&node.status)
         .bind(&node.cluster_id)
         .fetch_one(&self.pool)
         .await;
@@ -74,14 +75,15 @@ impl NodeRepository for PostgresNodeRepository {
         let result = sqlx::query_as::<_, Node>(
             r#"
             UPDATE nodes
-            SET name = $1, updated_at = $2, cluster_id = $3
-            WHERE id = $4
-            RETURNING id, name, cluster_id, created_at, updated_at
+            SET name = $1, status = $2, cluster_id = $3, updated_at = $4
+            WHERE id = $5
+            RETURNING id, name, status, cluster_id, created_at, updated_at
         "#,
         )
         .bind(&node.name)
-        .bind(Utc::now())
+        .bind(&node.status)
         .bind(&node.cluster_id)
+        .bind(Utc::now())
         .bind(&node.id)
         .fetch_one(&self.pool)
         .await;
@@ -98,7 +100,7 @@ impl NodeRepository for PostgresNodeRepository {
             r#"
             DELETE FROM nodes
             WHERE id = $1
-            RETURNING id, name, cluster_id, created_at, updated_at
+            RETURNING id, name, status, cluster_id, created_at, updated_at
         "#,
         )
         .bind(node_id)

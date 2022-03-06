@@ -2,7 +2,7 @@ mod application;
 mod domain;
 mod infrastructure;
 
-use crate::infrastructure::{PostgresClusterRepository, PostgresNodeRepository};
+use crate::infrastructure::db::{PostgresClusterRepository, PostgresNodeRepository};
 use actix_web::{middleware, web, App, HttpServer};
 use infrastructure::controllers;
 use std::sync::{
