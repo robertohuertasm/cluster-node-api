@@ -1,11 +1,15 @@
-use crate::domain::{
-    node::{Node, NodeStatus},
-    repository::{node_repository::NodeFilter, NodeRepository},
+use crate::{
+    domain::{
+        node::{Node, NodeStatus},
+        repository::{node_repository::NodeFilter, NodeRepository},
+    },
+    infrastructure::auth,
 };
 use actix_web::{
     web::{self, PathConfig},
     HttpResponse,
 };
+use actix_web_httpauth::middleware::HttpAuthentication;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
@@ -18,6 +22,7 @@ const PATH: &str = "/v1/node";
 pub fn service<R: NodeRepository>(cfg: &mut ServiceConfig) {
     cfg.service(
         web::scope(PATH)
+            .wrap(HttpAuthentication::bearer(auth::validator))
             .app_data(PathConfig::default().error_handler(path_config_handler))
             // GET
             .route("", web::get().to(get_all::<R>))

@@ -1,8 +1,13 @@
-use crate::domain::{cluster::Cluster, repository::ClusterRepository};
+use crate::{
+    domain::{cluster::Cluster, repository::ClusterRepository},
+    infrastructure::auth,
+};
 use actix_web::{
     web::{self, PathConfig},
     HttpResponse,
 };
+use actix_web_httpauth::middleware::HttpAuthentication;
+
 use tracing::instrument;
 use uuid::Uuid;
 use web::ServiceConfig;
@@ -14,6 +19,7 @@ const PATH: &str = "/v1/cluster";
 pub fn service<R: ClusterRepository>(cfg: &mut ServiceConfig) {
     cfg.service(
         web::scope(PATH)
+            .wrap(HttpAuthentication::bearer(auth::validator))
             .app_data(PathConfig::default().error_handler(path_config_handler))
             // GET
             .route("", web::get().to(get_all::<R>))

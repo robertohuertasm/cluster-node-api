@@ -3,6 +3,7 @@ mod domain;
 mod infrastructure;
 
 use crate::infrastructure::db::{PostgresClusterRepository, PostgresNodeRepository};
+use actix_cors::Cors;
 use actix_web::{middleware, web, App, HttpServer};
 use infrastructure::controllers;
 use tracing_subscriber::EnvFilter;
@@ -40,8 +41,10 @@ async fn main() -> std::io::Result<()> {
 
     // starting the server
     HttpServer::new(move || {
+        let cors = Cors::default().allowed_methods(vec!["GET", "POST", "PUT", "PATCH", "DELETE"]);
         App::new()
             .wrap(middleware::NormalizePath::trim())
+            .wrap(cors)
             .app_data(cluster_repo.clone())
             .app_data(node_repo.clone())
             .configure(controllers::clusters::service::<PostgresClusterRepository>)

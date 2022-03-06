@@ -1,6 +1,9 @@
+@token = Bearer im_a_valid_user
+
 ### create cluster
 POST http://localhost:8080/v1/cluster HTTP/1.1
 Content-Type: application/json
+Authorization: {{token}}
 
 {    
     "id": "356e42a8-e659-406f-98bb-6124414675e8",
@@ -10,6 +13,7 @@ Content-Type: application/json
 ### update cluster
 PUT http://localhost:8080/v1/cluster HTTP/1.1
 Content-Type: application/json
+Authorization: {{token}}
 
 {    
     "id": "356e42a8-e659-406f-98bb-6124414675e8",
@@ -19,13 +23,17 @@ Content-Type: application/json
 
 ### get clusters
 GET http://localhost:8080/v1/cluster HTTP/1.1
+Authorization: {{token}}
 
 ### get cluster
 GET http://localhost:8080/v1/cluster/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
+Authorization: {{token}}
 
 ### get bad cluster
 GET http://localhost:8080/v1/cluster/356e42a8-e659-406f-98 HTTP/1.1
+Authorization: {{token}}
 
 
 ### delete cluster
 DELETE  http://localhost:8080/v1/cluster/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
+Authorization: {{token}}
