@@ -7,21 +7,18 @@ use chrono::Utc;
 use tracing::instrument;
 use uuid::Uuid;
 
-pub struct PostgresRepository {
+pub struct PostgresClusterRepository {
     pool: sqlx::PgPool,
 }
 
-impl PostgresRepository {
-    pub async fn from_env() -> sqlx::Result<Self> {
-        let conn_str =
-            std::env::var("DATABASE_URL").map_err(|e| sqlx::Error::Configuration(Box::new(e)))?;
-        let pool = sqlx::PgPool::connect(&conn_str).await?;
-        Ok(Self { pool })
+impl PostgresClusterRepository {
+    pub fn new(pool: sqlx::PgPool) -> Self {
+        Self { pool }
     }
 }
 
 #[async_trait]
-impl ClusterRepository for PostgresRepository {
+impl ClusterRepository for PostgresClusterRepository {
     #[instrument(skip(self))]
     async fn get_clusters(&self) -> RepositoryResult<Vec<Cluster>> {
         let result =

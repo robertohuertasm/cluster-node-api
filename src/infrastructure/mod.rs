@@ -1,3 +1,6 @@
 pub mod controllers;
-pub mod memory_repository;
-pub mod postgres_repository;
+mod memory_cluster_repository;
+mod postgres_cluster_repository;
+
+pub use memory_cluster_repository::MemoryClusterRepository;
+pub use postgres_cluster_repository::PostgresClusterRepository;

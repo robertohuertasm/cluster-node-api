@@ -8,17 +8,21 @@ install_crate = "cargo-watch"
 command = "cargo"
 args = ["watch", "-x", "run --release"]
 
+[tasks.db-init]
+dependencies = ["db-start", "db-create", "db-migration-run"]
+
 [tasks.db-start]
 script_runner = "@shell"
 script = '''
-docker run -d --name postgres -p 5432:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=cluster_node_api postgres
+docker run -d --name cluster_node_api -p 1234:5432 -e POSTGRES_PASSWORD=postgres -e POSTGRES_USER=postgres -e POSTGRES_DB=cluster_node_api postgres
+sleep 2
 '''
 
-[tasks.db-stop]
+[tasks.db-clear]
 script_runner = "@shell"
 script = '''
-docker stop postgres
-docker rm postgres
+docker stop cluster_node_api
+docker rm cluster_node_api
 '''
 
 [tasks.db-create]
@@ -36,5 +40,7 @@ install_crate = "sqlx-cli"
 command = "sqlx"
 args = ["migrate", "run"]
 
-[tasks.reset]
-dependencies = ["db-stop", "db-start", "db-migration-run"]
+
+
+[tasks.db-reset]
+dependencies = ["db-clear", "db-init"]

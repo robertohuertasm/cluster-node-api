@@ -8,11 +8,11 @@ use std::sync::RwLock;
 use tracing::instrument;
 use uuid::Uuid;
 
-pub struct MemoryRepository {
+pub struct MemoryClusterRepository {
     clusters: RwLock<Vec<Cluster>>,
 }
 
-impl Default for MemoryRepository {
+impl Default for MemoryClusterRepository {
     fn default() -> Self {
         Self {
             clusters: RwLock::new(vec![]),
@@ -21,7 +21,7 @@ impl Default for MemoryRepository {
 }
 
 #[async_trait]
-impl ClusterRepository for MemoryRepository {
+impl ClusterRepository for MemoryClusterRepository {
     #[instrument(skip(self))]
     async fn get_clusters(&self) -> RepositoryResult<Vec<Cluster>> {
         let clusters = self.clusters.read()?;
