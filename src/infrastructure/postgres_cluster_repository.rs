@@ -1,6 +1,6 @@
 use crate::domain::{
     cluster::Cluster,
-    repository::{cluster_repository::ClusterRepository, RepositoryError, RepositoryResult},
+    repository::{ClusterRepository, RepositoryError, RepositoryResult},
 };
 use async_trait::async_trait;
 use chrono::Utc;
@@ -95,7 +95,7 @@ impl ClusterRepository for PostgresClusterRepository {
             r#"
             DELETE FROM clusters
             WHERE id = $1
-            RETURNING id, name, birth_date, custom_data, created_at, updated_at
+            RETURNING id, name, created_at, updated_at
         "#,
         )
         .bind(cluster_id)

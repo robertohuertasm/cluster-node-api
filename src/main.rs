@@ -2,8 +2,8 @@ mod application;
 mod domain;
 mod infrastructure;
 
-use crate::infrastructure::PostgresClusterRepository;
-use actix_web::{web, App, HttpServer};
+use crate::infrastructure::{PostgresClusterRepository, PostgresNodeRepository};
+use actix_web::{middleware, web, App, HttpServer};
 use infrastructure::controllers;
 use std::sync::{
     atomic::{AtomicU16, Ordering},
@@ -27,13 +27,14 @@ async fn main() -> std::io::Result<()> {
     }
 
     let conn_str = std::env::var("DATABASE_URL").expect("No DATABASE_URL env var found");
-    // pool uses arc internally so it can be cloned without any impact
     let pool = sqlx::PgPool::connect(&conn_str)
         .await
         .expect("Can't connect to database");
 
     // instantiate repos
-    let cluster_repo = web::Data::new(PostgresClusterRepository::new(pool));
+    // pool uses arc internally so it can be cloned without any impact
+    let cluster_repo = web::Data::new(PostgresClusterRepository::new(pool.clone()));
+    let node_repo = web::Data::new(PostgresNodeRepository::new(pool));
 
     // building address
     let port = std::env::var("PORT").unwrap_or("8080".to_string());
@@ -48,9 +49,12 @@ async fn main() -> std::io::Result<()> {
         tracing::trace!("Starting thread {}", thread_index);
         // starting the services
         App::new()
+            .wrap(middleware::NormalizePath::trim())
             .app_data(web::Data::new(thread_index))
             .app_data(cluster_repo.clone())
+            .app_data(node_repo.clone())
             .configure(controllers::clusters::service::<PostgresClusterRepository>)
+            .configure(controllers::nodes::service::<PostgresNodeRepository>)
             .configure(controllers::health::service)
     })
     .bind(&address)

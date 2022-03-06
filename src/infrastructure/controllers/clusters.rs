@@ -1,12 +1,13 @@
-use crate::domain::{cluster::Cluster, repository::cluster_repository::ClusterRepository};
+use crate::domain::{cluster::Cluster, repository::ClusterRepository};
 use actix_web::{
-    error::PathError,
     web::{self, PathConfig},
-    HttpRequest, HttpResponse,
+    HttpResponse,
 };
 use tracing::instrument;
 use uuid::Uuid;
 use web::ServiceConfig;
+
+use super::path_config_handler;
 
 const PATH: &str = "/v1/cluster";
 
@@ -15,14 +16,23 @@ pub fn service<R: ClusterRepository>(cfg: &mut ServiceConfig) {
         web::scope(PATH)
             .app_data(PathConfig::default().error_handler(path_config_handler))
             // GET
+            .route("", web::get().to(get_all::<R>))
             .route("/{cluster_id}", web::get().to(get::<R>))
             // POST
-            .route("/", web::post().to(post::<R>))
+            .route("", web::post().to(post::<R>))
             // PUT
-            .route("/", web::put().to(put::<R>))
+            .route("", web::put().to(put::<R>))
             // DELETE
             .route("/{cluster_id}", web::delete().to(delete::<R>)),
     );
+}
+
+#[instrument(skip(repo))]
+async fn get_all<R: ClusterRepository>(repo: web::Data<R>) -> HttpResponse {
+    match repo.get_clusters().await {
+        Ok(clusters) => HttpResponse::Ok().json(clusters),
+        Err(_) => HttpResponse::NotFound().body("Not found"),
+    }
 }
 
 #[instrument(skip(repo))]
@@ -67,12 +77,6 @@ async fn delete<R: ClusterRepository>(
         Ok(id) => HttpResponse::Ok().body(id.to_string()),
         Err(e) => HttpResponse::InternalServerError().body(format!("Something went wrong: {}", e)),
     }
-}
-
-#[instrument(fields( path=?_req.path()), skip(_req))]
-fn path_config_handler(err: PathError, _req: &HttpRequest) -> actix_web::Error {
-    tracing::error!(error=?err, "There was an error with the path");
-    actix_web::error::ErrorBadRequest(err)
 }
 
 #[cfg(test)]

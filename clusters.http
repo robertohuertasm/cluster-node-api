@@ -1,26 +1,24 @@
-### health
-GET http://localhost:8080/health HTTP/1.1
-
 ### create cluster
-POST http://localhost:8080/v1/cluster/ HTTP/1.1
+POST http://localhost:8080/v1/cluster HTTP/1.1
 Content-Type: application/json
 
 {    
     "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "name": "cluster_1",
+    "name": "cluster_1"
 }
 
 ### update cluster
-PUT http://localhost:8080/v1/cluster/ HTTP/1.1
+PUT http://localhost:8080/v1/cluster HTTP/1.1
 Content-Type: application/json
 
 {    
     "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "name": "cluster_2",
+    "name": "cluster_2"
 }
 
+
 ### get clusters
-GET http://localhost:8080/v1/clusters HTTP/1.1
+GET http://localhost:8080/v1/cluster HTTP/1.1
 
 ### get cluster
 GET http://localhost:8080/v1/cluster/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
