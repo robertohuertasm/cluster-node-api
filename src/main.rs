@@ -1,5 +1,5 @@
 mod domain;
-mod infrastructure;
+pub mod infrastructure;
 
 use crate::infrastructure::db::{PostgresClusterRepository, PostgresNodeRepository};
 use actix_cors::Cors;

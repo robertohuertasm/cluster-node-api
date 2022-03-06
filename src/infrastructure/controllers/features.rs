@@ -6,7 +6,7 @@ use tracing::instrument;
 
 #[instrument(skip(cfg), level = "trace")]
 pub fn service(cfg: &mut ServiceConfig) {
-    cfg.route("/features", web::get().to(features));
+    cfg.route("/v1/features", web::get().to(features));
 }
 
 #[instrument]
@@ -34,7 +34,7 @@ mod tests {
         let app = App::new().configure(service);
         let mut app = actix_web::test::init_service(app).await;
         let req = actix_web::test::TestRequest::get()
-            .uri("/features")
+            .uri("/v1/features")
             .to_request();
         let res = actix_web::test::call_service(&mut app, req).await;
         assert!(res.status().is_success());

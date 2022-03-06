@@ -17,7 +17,7 @@ use web::ServiceConfig;
 
 use super::path_config_handler;
 
-const PATH: &str = "/v1/node";
+const PATH: &str = "/v1/nodes";
 
 pub fn service<R: NodeRepository>(cfg: &mut ServiceConfig) {
     cfg.service(

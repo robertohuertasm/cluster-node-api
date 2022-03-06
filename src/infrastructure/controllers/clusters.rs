@@ -14,7 +14,7 @@ use web::ServiceConfig;
 
 use super::path_config_handler;
 
-const PATH: &str = "/v1/cluster";
+const PATH: &str = "/v1/clusters";
 
 pub fn service<R: ClusterRepository>(cfg: &mut ServiceConfig) {
     cfg.service(
@@ -90,16 +90,20 @@ mod tests {
 
     use super::*;
     use crate::domain::repository::cluster_repository::MockClusterRepository;
-    use actix_web::body::MessageBody;
+    use actix_web::{body::MessageBody, http::StatusCode, App};
     use chrono::Utc;
 
-    pub fn create_test_cluster(id: uuid::Uuid, name: String) -> Cluster {
+    fn create_test_cluster(id: uuid::Uuid, name: String) -> Cluster {
         Cluster {
             id,
             name,
             created_at: Some(Utc::now()),
             updated_at: None,
         }
+    }
+
+    fn valid_bearer() -> (&'static str, &'static str) {
+        ("Authorization", "Bearer im_a_valid_user")
     }
 
     #[actix_rt::test]
@@ -120,6 +124,58 @@ mod tests {
 
         assert!(clusters.len() == 1);
         assert_eq!(clusters[0], test_cluster);
+    }
+
+    #[actix_rt::test]
+    async fn get_all_integration_works() {
+        let test_cluster = create_test_cluster(uuid::Uuid::new_v4(), "CLUSTER_NAME".to_string());
+        let test_cluster_clone = test_cluster.clone();
+
+        let mut repo = MockClusterRepository::default();
+        repo.expect_get_clusters()
+            .returning(move || Ok(vec![test_cluster_clone.clone()]));
+
+        let app = App::new()
+            .app_data(web::Data::new(repo))
+            .configure(service::<MockClusterRepository>);
+
+        let mut app = actix_web::test::init_service(app).await;
+
+        let req = actix_web::test::TestRequest::get()
+            .uri(PATH)
+            .insert_header(valid_bearer())
+            .to_request();
+
+        let res = actix_web::test::call_service(&mut app, req).await;
+
+        assert_eq!(res.status(), StatusCode::OK);
+
+        let body = res.into_body().try_into_bytes().unwrap();
+        let body_res = serde_json::from_slice::<'_, Vec<Cluster>>(&body)
+            .ok()
+            .unwrap();
+        assert_eq!(body_res, vec![test_cluster]);
+    }
+
+    #[actix_rt::test]
+    async fn get_all_integration_fails_if_no_authentication() {
+        let test_cluster = create_test_cluster(uuid::Uuid::new_v4(), "CLUSTER_NAME".to_string());
+        let test_cluster_clone = test_cluster.clone();
+
+        let mut repo = MockClusterRepository::default();
+        repo.expect_get_clusters()
+            .returning(move || Ok(vec![test_cluster_clone.clone()]));
+
+        let app = App::new()
+            .app_data(web::Data::new(repo))
+            .configure(service::<MockClusterRepository>);
+
+        let mut app = actix_web::test::init_service(app).await;
+
+        let req = actix_web::test::TestRequest::get().uri(PATH).to_request();
+        let res = actix_web::test::call_service(&mut app, req).await;
+
+        assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
     }
 
     #[actix_rt::test]

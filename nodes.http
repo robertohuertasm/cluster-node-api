@@ -1,7 +1,7 @@
 @token = Bearer im_a_valid_user
 
 ### create node
-POST http://localhost:8080/v1/node HTTP/1.1
+POST http://localhost:8080/v1/nodes HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -14,7 +14,7 @@ Authorization: {{token}}
 }
 
 ### update node 
-PUT http://localhost:8080/v1/node HTTP/1.1
+PUT http://localhost:8080/v1/nodes HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -27,7 +27,7 @@ Authorization: {{token}}
 }
 
 ### update node status to off
-PATCH http://localhost:8080/v1/node HTTP/1.1
+PATCH http://localhost:8080/v1/nodes HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -37,7 +37,7 @@ Authorization: {{token}}
 }
 
 ### update node status to on
-PATCH http://localhost:8080/v1/node HTTP/1.1
+PATCH http://localhost:8080/v1/nodes HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -47,7 +47,7 @@ Authorization: {{token}}
 }
 
 ### update node status to rebooting
-PATCH http://localhost:8080/v1/node HTTP/1.1
+PATCH http://localhost:8080/v1/nodes HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
@@ -57,21 +57,21 @@ Authorization: {{token}}
 }
 
 ### get nodes
-GET http://localhost:8080/v1/node HTTP/1.1
+GET http://localhost:8080/v1/nodes HTTP/1.1
 Authorization: {{token}}
 
 ### get nodes filtered by name
-GET http://localhost:8080/v1/node?name=node HTTP/1.1
+GET http://localhost:8080/v1/node?name=nodes HTTP/1.1
 Authorization: {{token}}
 
 ### get node
-GET http://localhost:8080/v1/node/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
+GET http://localhost:8080/v1/nodes/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
 Authorization: {{token}}
 
 ### get bad node
-GET http://localhost:8080/v1/node/356e42a8-e659-406f-98 HTTP/1.1
+GET http://localhost:8080/v1/nodes/356e42a8-e659-406f-98 HTTP/1.1
 Authorization: {{token}}
 
 ### delete node
-DELETE  http://localhost:8080/v1/node/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
+DELETE  http://localhost:8080/v1/nodes/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
 Authorization: {{token}}
