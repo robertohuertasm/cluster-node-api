@@ -151,7 +151,7 @@ mod tests {
 
         let res = prepare_get_all_response(cluster.clone(), req).await;
         assert_eq!(res.status(), StatusCode::OK);
-        // let clusters = service_response_to::<Vec<Cluster>>(&res);
+
         let body = res.into_body().try_into_bytes().unwrap();
         let clusters = serde_json::from_slice::<'_, Vec<Cluster>>(&body)
             .ok()
@@ -205,23 +205,21 @@ mod tests {
 
     #[actix_rt::test]
     async fn get_integration_works() {
-        let cluster_id = uuid::Uuid::new_v4();
-        let cluster_name = "CLUSTER_NAME";
+        let expected = create_test_cluster(uuid::Uuid::new_v4(), "CLUSTER_NAME".to_string());
 
         let req = actix_web::test::TestRequest::get()
-            .uri(&format!("{}/{}", PATH, cluster_id))
+            .uri(&format!("{}/{}", PATH, expected.id))
             .insert_header(valid_bearer())
             .to_request();
 
-        let res = prepare_get_response(cluster_name.to_owned(), req).await;
+        let res = prepare_get_response(expected.name.clone(), req).await;
         assert_eq!(res.status(), StatusCode::OK);
 
-        // let cluster = service_response_to::<Cluster>(&res);
         let body = res.into_body().try_into_bytes().unwrap();
         let cluster = serde_json::from_slice::<'_, Cluster>(&body).ok().unwrap();
 
-        assert_eq!(cluster.id, cluster_id);
-        assert_eq!(cluster.name, cluster_name);
+        assert_eq!(cluster.id, expected.id);
+        assert_eq!(cluster.name, expected.name);
     }
 
     #[actix_rt::test]
@@ -288,7 +286,7 @@ mod tests {
         let new_cluster = create_test_cluster(uuid::Uuid::new_v4(), "CLUSTER_NAME".to_string());
         let req = actix_web::test::TestRequest::post()
             .uri(PATH)
-            .set_json(new_cluster.clone())
+            .set_json(new_cluster)
             .to_request();
         let res = prepare_create_response(req).await;
         assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
@@ -347,7 +345,7 @@ mod tests {
         let new_cluster = create_test_cluster(uuid::Uuid::new_v4(), "CLUSTER_NAME".to_string());
         let req = actix_web::test::TestRequest::put()
             .uri(PATH)
-            .set_json(new_cluster.clone())
+            .set_json(new_cluster)
             .to_request();
         let res = prepare_update_response(req).await;
         assert_eq!(res.status(), StatusCode::UNAUTHORIZED);
