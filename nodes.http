@@ -1,0 +1,58 @@
+### health
+GET http://localhost:8080/health HTTP/1.1
+
+### create node
+POST http://localhost:8080/v1/node/ HTTP/1.1
+Content-Type: application/json
+
+{    
+    "id": "356e42a8-e659-406f-98bb-6124414675e8",
+    "name": "node_1",
+    "cluster_id": "356e42a8-e659-406f-98bb-6124414675e8"
+}
+
+### update node status to off
+PATCH http://localhost:8080/v1/cluster/ HTTP/1.1
+Content-Type: application/json
+
+{    
+    "id": "356e42a8-e659-406f-98bb-6124414675e8",
+    "status": "poweroff",
+}
+
+### update node status to on
+PATCH http://localhost:8080/v1/cluster/ HTTP/1.1
+Content-Type: application/json
+
+{    
+    "id": "356e42a8-e659-406f-98bb-6124414675e8",
+    "status": "poweron",
+}
+
+### update node status to rebooting
+PATCH http://localhost:8080/v1/cluster/ HTTP/1.1
+Content-Type: application/json
+
+{    
+    "id": "356e42a8-e659-406f-98bb-6124414675e8",
+    "status": "rebooting",
+}
+
+### get nodes
+GET http://localhost:8080/v1/nodes HTTP/1.1
+
+### get nodes filtered by name
+GET http://localhost:8080/v1/nodes?name=node_1 HTTP/1.1
+
+### get nodes filtered by cluster name
+GET http://localhost:8080/v1/nodes?cluster_name=cluster_1 HTTP/1.1
+
+### get node
+GET http://localhost:8080/v1/node/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
+
+### get bad node
+GET http://localhost:8080/v1/node/356e42a8-e659-406f-98 HTTP/1.1
+
+
+### delete node
+DELETE  http://localhost:8080/v1/node/356e42a8-e659-406f-98bb-6124414675e8 HTTP/1.1
