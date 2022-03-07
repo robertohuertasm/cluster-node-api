@@ -1,10 +1,13 @@
+mod application;
 mod domain;
-pub mod infrastructure;
+mod infrastructure;
 
-use crate::infrastructure::db::{PostgresClusterRepository, PostgresNodeRepository};
 use actix_cors::Cors;
 use actix_web::{middleware, web, App, HttpServer};
-use infrastructure::controllers;
+use infrastructure::{
+    controllers,
+    db::{PostgresClusterRepository, PostgresNodeRepository},
+};
 use tracing_subscriber::EnvFilter;
 
 #[actix_web::main]

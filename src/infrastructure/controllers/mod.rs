@@ -4,6 +4,7 @@ pub mod clusters;
 pub mod features;
 pub mod health;
 pub mod nodes;
+pub mod operations;
 
 #[instrument(fields( path=?_req.path()), skip(_req))]
 fn path_config_handler(
