@@ -61,16 +61,16 @@ async fn main() -> std::io::Result<()> {
             .app_data(cluster_repo.clone())
             .app_data(node_repo.clone())
             .app_data(ops_svc.clone())
-            .configure(controllers::clusters::service::<PostgresClusterRepository>)
-            .configure(controllers::nodes::service::<PostgresNodeRepository>)
+            .configure(controllers::clusters::configuration::<PostgresClusterRepository>)
+            .configure(controllers::nodes::configuration::<PostgresNodeRepository>)
             .configure(
-                controllers::operations::service::<
+                controllers::operations::configuration::<
                     PostgresNodeRepository,
                     PostgresOperationRepository,
                 >,
             )
-            .configure(controllers::health::service)
-            .configure(controllers::features::service)
+            .configure(controllers::health::configuration)
+            .configure(controllers::features::configuration)
     })
     .bind(&address)
     .unwrap_or_else(|err| {

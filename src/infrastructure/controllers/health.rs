@@ -5,7 +5,7 @@ use actix_web::{
 use tracing::instrument;
 
 #[instrument(skip(cfg), level = "trace")]
-pub fn service(cfg: &mut ServiceConfig) {
+pub fn configuration(cfg: &mut ServiceConfig) {
     tracing::trace!("Init health service");
     cfg.route("/health", web::get().to(health_check));
 }
@@ -29,7 +29,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn health_check_integration_works() {
-        let app = App::new().configure(service);
+        let app = App::new().configure(configuration);
         let mut app = actix_web::test::init_service(app).await;
         let req = actix_web::test::TestRequest::get()
             .uri("/health")

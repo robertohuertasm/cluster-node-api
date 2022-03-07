@@ -5,7 +5,7 @@ use actix_web::{
 use tracing::instrument;
 
 #[instrument(skip(cfg), level = "trace")]
-pub fn service(cfg: &mut ServiceConfig) {
+pub fn configuration(cfg: &mut ServiceConfig) {
     cfg.route("/v1/features", web::get().to(features));
 }
 
@@ -31,7 +31,7 @@ mod tests {
 
     #[actix_rt::test]
     async fn features_integration_works() {
-        let app = App::new().configure(service);
+        let app = App::new().configure(configuration);
         let mut app = actix_web::test::init_service(app).await;
         let req = actix_web::test::TestRequest::get()
             .uri("/v1/features")

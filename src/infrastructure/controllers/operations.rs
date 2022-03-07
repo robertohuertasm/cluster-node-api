@@ -16,8 +16,7 @@ use super::path_config_handler;
 
 const PATH: &str = "/v1/operations";
 
-// TODO: CHANGE NAME TO THIS TO AVOID CONFUSION: USE CONTROLLER OR SOMETHING?
-pub fn service<N, R>(cfg: &mut ServiceConfig)
+pub fn configuration<N, R>(cfg: &mut ServiceConfig)
 where
     N: NodeRepository,
     R: OperationRepository,
@@ -71,17 +70,13 @@ mod tests {
         models::{Node, NodeStatus, Operation, OperationType},
         repository::{
             node_repository::MockNodeRepository, operation_repository::MockOperationRepository,
+            RepositoryError,
         },
     };
 
     use super::*;
-    use actix_http::Request;
-    use actix_web::{body::MessageBody, dev::ServiceResponse, http::StatusCode, App};
+    use actix_web::{body::MessageBody, http::StatusCode};
     use chrono::Utc;
-
-    fn valid_bearer() -> (&'static str, &'static str) {
-        ("Authorization", "Bearer im_a_valid_user")
-    }
 
     fn create_test_node(id: uuid::Uuid, name: String) -> Node {
         Node {
@@ -114,6 +109,19 @@ mod tests {
         OperationService::new(node_repo, ops_repo)
     }
 
+    fn prepare_operation_svc_with_error(
+    ) -> OperationService<MockNodeRepository, MockOperationRepository> {
+        let mut node_repo = MockNodeRepository::default();
+        node_repo
+            .expect_get_node()
+            .once()
+            .returning(|_| Err(RepositoryError::DoesNotExist));
+
+        let ops_repo = MockOperationRepository::default();
+
+        OperationService::new(node_repo, ops_repo)
+    }
+
     #[actix_rt::test]
     async fn poweron_works() {
         let node_id = uuid::Uuid::new_v4();
@@ -125,6 +133,14 @@ mod tests {
 
         assert_eq!(operation.node_id, node_id);
         assert_eq!(operation.operation_type, OperationType::PowerOn);
+    }
+
+    #[actix_rt::test]
+    async fn poweron_errors_properly() {
+        let node_id = uuid::Uuid::new_v4();
+        let svc = prepare_operation_svc_with_error();
+        let res = post_poweron(web::Json(node_id), web::Data::new(svc)).await;
+        assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 
     #[actix_rt::test]
@@ -141,6 +157,14 @@ mod tests {
     }
 
     #[actix_rt::test]
+    async fn poweroff_errors_properly() {
+        let node_id = uuid::Uuid::new_v4();
+        let svc = prepare_operation_svc_with_error();
+        let res = post_poweroff(web::Json(node_id), web::Data::new(svc)).await;
+        assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
+
+    #[actix_rt::test]
     async fn reboot_works() {
         let node_id = uuid::Uuid::new_v4();
         let svc = prepare_operation_svc();
@@ -151,5 +175,13 @@ mod tests {
 
         assert_eq!(operation.node_id, node_id);
         assert_eq!(operation.operation_type, OperationType::Reboot);
+    }
+
+    #[actix_rt::test]
+    async fn reboot_errors_properly() {
+        let node_id = uuid::Uuid::new_v4();
+        let svc = prepare_operation_svc_with_error();
+        let res = post_reboot(web::Json(node_id), web::Data::new(svc)).await;
+        assert_eq!(res.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 }

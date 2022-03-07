@@ -16,7 +16,7 @@ use super::path_config_handler;
 
 const PATH: &str = "/v1/clusters";
 
-pub fn service<R: ClusterRepository>(cfg: &mut ServiceConfig) {
+pub fn configuration<R: ClusterRepository>(cfg: &mut ServiceConfig) {
     cfg.service(
         web::scope(PATH)
             .wrap(HttpAuthentication::bearer(auth::validator))
@@ -134,7 +134,7 @@ mod tests {
 
         let app = App::new()
             .app_data(web::Data::new(repo))
-            .configure(service::<MockClusterRepository>);
+            .configure(configuration::<MockClusterRepository>);
 
         let mut svc = actix_web::test::init_service(app).await;
         actix_web::test::call_service(&mut svc, req).await
@@ -197,7 +197,7 @@ mod tests {
 
         let app = App::new()
             .app_data(web::Data::new(repo))
-            .configure(service::<MockClusterRepository>);
+            .configure(configuration::<MockClusterRepository>);
 
         let mut svc = actix_web::test::init_service(app).await;
         actix_web::test::call_service(&mut svc, req).await
@@ -256,7 +256,7 @@ mod tests {
 
         let app = App::new()
             .app_data(web::Data::new(repo))
-            .configure(service::<MockClusterRepository>);
+            .configure(configuration::<MockClusterRepository>);
 
         let mut svc = actix_web::test::init_service(app).await;
         actix_web::test::call_service(&mut svc, req).await
@@ -315,7 +315,7 @@ mod tests {
 
         let app = App::new()
             .app_data(web::Data::new(repo))
-            .configure(service::<MockClusterRepository>);
+            .configure(configuration::<MockClusterRepository>);
 
         let mut svc = actix_web::test::init_service(app).await;
         actix_web::test::call_service(&mut svc, req).await
@@ -374,7 +374,7 @@ mod tests {
 
         let app = App::new()
             .app_data(web::Data::new(repo))
-            .configure(service::<MockClusterRepository>);
+            .configure(configuration::<MockClusterRepository>);
 
         let mut svc = actix_web::test::init_service(app).await;
         actix_web::test::call_service(&mut svc, req).await
