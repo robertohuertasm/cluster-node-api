@@ -4,7 +4,7 @@ use sqlx::FromRow;
 use uuid::Uuid;
 
 #[derive(Debug, Copy, Clone, Deserialize, Serialize, sqlx::Type, PartialEq, Eq)]
-#[sqlx(type_name = "node_status", rename_all = "lowercase")]
+#[sqlx(type_name = "operation_type", rename_all = "lowercase")]
 pub enum OperationType {
     #[serde(rename = "poweron")]
     PowerOn,

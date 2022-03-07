@@ -1,5 +1,5 @@
 use crate::domain::{
-    models::{Operation, OperationType},
+    models::{Node, NodeStatus, Operation, OperationType},
     repository::{NodeRepository, OperationRepository, RepositoryError},
 };
 use thiserror::Error;
@@ -56,21 +56,29 @@ where
         node_id: &Uuid,
         operation_type: OperationType,
     ) -> OperationServiceResult {
-        self.node_check(node_id).await?;
+        let mut node = self.node_check(node_id).await?;
+        // TODO: ideally, this should be transactional
         let operation = Operation::new(node_id.to_owned(), operation_type);
         let operation = self
             .operation_repository
             .create_operation(&operation)
             .await?;
+
+        node.status = match operation_type {
+            OperationType::PowerOn => NodeStatus::PowerOn,
+            OperationType::PowerOff => NodeStatus::PowerOff,
+            OperationType::Reboot => NodeStatus::Rebooting,
+        };
+        self.node_repository.update_node(&node).await?;
         Ok(operation)
     }
 
     #[instrument(skip(self))]
-    async fn node_check(&self, node_id: &Uuid) -> Result<(), OperationServiceError> {
-        if let Err(e) = self.node_repository.get_node(node_id).await {
+    async fn node_check(&self, node_id: &Uuid) -> Result<Node, OperationServiceError> {
+        let result = self.node_repository.get_node(node_id).await;
+        result.map_err(|e| {
             tracing::error!("Node not found in database: {:?}", e);
-            return Err(OperationServiceError::NodeNotFound(node_id.to_owned()));
-        }
-        Ok(())
+            OperationServiceError::NodeNotFound(node_id.to_owned())
+        })
     }
 }

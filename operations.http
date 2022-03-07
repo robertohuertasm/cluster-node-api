@@ -5,28 +5,20 @@ POST http://localhost:8080/v1/operations/poweron HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
-{    
-    "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "node_id": "356e42a8-e659-406f-98bb-6124414675e8",
-}
+"356e42a8-e659-406f-98bb-6124414675e8"
+
 
 ### create poweron operation
 POST http://localhost:8080/v1/operations/poweroff HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
-{    
-    "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "node_id": "356e42a8-e659-406f-98bb-6124414675e8",
-}
+"356e42a8-e659-406f-98bb-6124414675e8"
+
 
 ### create poweron operation
 POST http://localhost:8080/v1/operations/reboot HTTP/1.1
 Content-Type: application/json
 Authorization: {{token}}
 
-{    
-    "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "node_id": "356e42a8-e659-406f-98bb-6124414675e8",
-}
-
+"356e42a8-e659-406f-98bb-6124414675e8"
