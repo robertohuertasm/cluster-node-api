@@ -17,6 +17,14 @@ impl PostgresNodeRepository {
     }
 }
 
+impl Clone for PostgresNodeRepository {
+    fn clone(&self) -> Self {
+        Self {
+            pool: self.pool.clone(),
+        }
+    }
+}
+
 #[async_trait]
 impl NodeRepository for PostgresNodeRepository {
     #[instrument(skip(self))]

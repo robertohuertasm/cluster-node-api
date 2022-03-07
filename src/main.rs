@@ -2,12 +2,15 @@ mod application;
 mod domain;
 mod infrastructure;
 
+use crate::{
+    application::operation_service::OperationService,
+    infrastructure::{
+        controllers,
+        db::{PostgresClusterRepository, PostgresNodeRepository, PostgresOperationRepository},
+    },
+};
 use actix_cors::Cors;
 use actix_web::{middleware, web, App, HttpServer};
-use infrastructure::{
-    controllers,
-    db::{PostgresClusterRepository, PostgresNodeRepository},
-};
 use tracing_subscriber::EnvFilter;
 
 #[actix_web::main]
@@ -32,8 +35,16 @@ async fn main() -> std::io::Result<()> {
 
     // instantiate repos
     // pool uses arc internally so it can be cloned without any impact
-    let cluster_repo = web::Data::new(PostgresClusterRepository::new(pool.clone()));
-    let node_repo = web::Data::new(PostgresNodeRepository::new(pool));
+    let cluster_repo = PostgresClusterRepository::new(pool.clone());
+    let node_repo = PostgresNodeRepository::new(pool.clone());
+    let ops_repo = PostgresOperationRepository::new(pool.clone());
+
+    // application services
+    let ops_svc = OperationService::new(node_repo.clone(), ops_repo.clone());
+
+    let cluster_repo = web::Data::new(cluster_repo);
+    let node_repo = web::Data::new(node_repo);
+    let ops_svc = web::Data::new(ops_svc);
 
     // building address
     let port = std::env::var("PORT").unwrap_or("8080".to_string());
@@ -49,8 +60,15 @@ async fn main() -> std::io::Result<()> {
             .wrap(cors)
             .app_data(cluster_repo.clone())
             .app_data(node_repo.clone())
+            .app_data(ops_svc.clone())
             .configure(controllers::clusters::service::<PostgresClusterRepository>)
             .configure(controllers::nodes::service::<PostgresNodeRepository>)
+            .configure(
+                controllers::operations::service::<
+                    PostgresNodeRepository,
+                    PostgresOperationRepository,
+                >,
+            )
             .configure(controllers::health::service)
             .configure(controllers::features::service)
     })

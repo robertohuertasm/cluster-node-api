@@ -1,8 +1,6 @@
 use crate::{
-    domain::{
-        operation::{Operation, OperationType},
-        repository::{NodeRepository, OperationRepository},
-    },
+    application::operation_service::{OperationService, OperationServiceResult},
+    domain::repository::{NodeRepository, OperationRepository},
     infrastructure::auth,
 };
 use actix_web::{
@@ -10,7 +8,6 @@ use actix_web::{
     HttpResponse,
 };
 use actix_web_httpauth::middleware::HttpAuthentication;
-use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
 use web::ServiceConfig;
@@ -20,7 +17,11 @@ use super::path_config_handler;
 const PATH: &str = "/v1/operations";
 
 // TODO: CHANGE NAME TO THIS TO AVOID CONFUSION: USE CONTROLLER OR SOMETHING?
-pub fn service<N: NodeRepository, R: OperationRepository>(cfg: &mut ServiceConfig) {
+pub fn service<N, R>(cfg: &mut ServiceConfig)
+where
+    N: NodeRepository,
+    R: OperationRepository,
+{
     cfg.service(
         web::scope(PATH)
             .wrap(HttpAuthentication::bearer(auth::validator))
@@ -32,45 +33,33 @@ pub fn service<N: NodeRepository, R: OperationRepository>(cfg: &mut ServiceConfi
     );
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
-pub struct OperationDTO {
-    pub id: Uuid,
-    pub node_id: Uuid,
+fn to_response(operation_result: OperationServiceResult) -> HttpResponse {
+    match operation_result {
+        Ok(operation) => HttpResponse::Created().json(operation),
+        Err(e) => HttpResponse::InternalServerError().body(format!("Something went wrong: {}", e)),
+    }
 }
 
-#[instrument(skip(repo))]
+#[instrument(skip(svc))]
 async fn post_poweron<N: NodeRepository, R: OperationRepository>(
-    operation: web::Json<OperationDTO>,
-    repo: web::Data<R>,
+    node_id: web::Json<Uuid>,
+    svc: web::Data<OperationService<N, R>>,
 ) -> HttpResponse {
-    let operation = Operation::new(operation.node_id, OperationType::PowerOn);
-    match repo.create_operation(&operation).await {
-        Ok(operation) => HttpResponse::Created().json(operation),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Something went wrong: {}", e)),
-    }
+    to_response(svc.power_on(&node_id).await)
 }
 
-#[instrument(skip(repo))]
+#[instrument(skip(svc))]
 async fn post_poweroff<N: NodeRepository, R: OperationRepository>(
-    operation: web::Json<OperationDTO>,
-    repo: web::Data<R>,
+    node_id: web::Json<Uuid>,
+    svc: web::Data<OperationService<N, R>>,
 ) -> HttpResponse {
-    let operation = Operation::new(operation.node_id, OperationType::PowerOff);
-
-    match repo.create_operation(&operation).await {
-        Ok(operation) => HttpResponse::Created().json(operation),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Something went wrong: {}", e)),
-    }
+    to_response(svc.power_off(&node_id).await)
 }
 
-#[instrument(skip(repo))]
+#[instrument(skip(svc))]
 async fn post_reboot<N: NodeRepository, R: OperationRepository>(
-    operation: web::Json<OperationDTO>,
-    repo: web::Data<R>,
+    node_id: web::Json<Uuid>,
+    svc: web::Data<OperationService<N, R>>,
 ) -> HttpResponse {
-    let operation = Operation::new(operation.node_id, OperationType::Reboot);
-    match repo.create_operation(&operation).await {
-        Ok(operation) => HttpResponse::Created().json(operation),
-        Err(e) => HttpResponse::InternalServerError().body(format!("Something went wrong: {}", e)),
-    }
+    to_response(svc.reboot(&node_id).await)
 }

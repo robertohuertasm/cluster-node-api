@@ -17,6 +17,14 @@ impl PostgresClusterRepository {
     }
 }
 
+impl Clone for PostgresClusterRepository {
+    fn clone(&self) -> Self {
+        Self {
+            pool: self.pool.clone(),
+        }
+    }
+}
+
 #[async_trait]
 impl ClusterRepository for PostgresClusterRepository {
     #[instrument(skip(self))]
