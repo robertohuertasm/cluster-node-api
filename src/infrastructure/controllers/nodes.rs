@@ -117,7 +117,7 @@ mod tests {
     use actix_web::{body::MessageBody, dev::ServiceResponse, App};
     use chrono::Utc;
 
-    pub fn create_test_node(id: uuid::Uuid, name: String) -> Node {
+    fn create_test_node(id: uuid::Uuid, name: String) -> Node {
         Node {
             id,
             name,
