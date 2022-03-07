@@ -1,8 +1,10 @@
 pub mod cluster_repository;
 pub mod node_repository;
+pub mod operation_repository;
 
 pub use cluster_repository::ClusterRepository;
 pub use node_repository::NodeRepository;
+pub use operation_repository::OperationRepository;
 
 use std::{error::Error, sync::PoisonError};
 use thiserror::Error;

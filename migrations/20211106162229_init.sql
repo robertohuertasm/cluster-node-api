@@ -2,6 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- CUSTOM TYPES
 CREATE TYPE node_status AS ENUM ('poweron', 'poweroff', 'rebooting');
+CREATE TYPE operation_type AS ENUM ('poweron', 'poweroff', 'reboot');
 
 -- TABLE: clusters
 CREATE TABLE clusters
@@ -29,3 +30,16 @@ CREATE TABLE nodes
 );
 
 CREATE UNIQUE INDEX node_name ON nodes (name);
+
+-- TABLE: operations
+
+CREATE TABLE operations
+(
+    id uuid DEFAULT uuid_generate_v1() NOT NULL PRIMARY KEY,
+    operation_type operation_type NOT NULL,
+    node_id uuid NOT NULL CONSTRAINT operations_nodes_id_fk
+            REFERENCES nodes
+            ON DELETE CASCADE,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone
+);
