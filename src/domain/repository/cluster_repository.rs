@@ -1,5 +1,5 @@
 use super::RepositoryResult;
-use crate::domain::cluster::Cluster;
+use crate::domain::models::Cluster;
 use async_trait::async_trait;
 use uuid::Uuid;
 

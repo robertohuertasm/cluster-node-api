@@ -1,6 +1,6 @@
 use crate::{
     domain::{
-        node::{Node, NodeStatus},
+        models::{Node, NodeStatus},
         repository::{node_repository::NodeFilter, NodeRepository},
     },
     infrastructure::auth,
@@ -112,7 +112,7 @@ async fn delete<R: NodeRepository>(node_id: web::Path<Uuid>, repo: web::Data<R>)
 mod tests {
 
     use super::*;
-    use crate::domain::{node::NodeStatus, repository::node_repository::MockNodeRepository};
+    use crate::domain::{models::NodeStatus, repository::node_repository::MockNodeRepository};
     use actix_http::{Request, StatusCode};
     use actix_web::{body::MessageBody, dev::ServiceResponse, App};
     use chrono::Utc;

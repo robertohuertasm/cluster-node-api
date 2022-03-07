@@ -1,5 +1,5 @@
 use crate::domain::{
-    cluster::Cluster,
+    models::Cluster,
     repository::{cluster_repository::ClusterRepository, RepositoryError, RepositoryResult},
 };
 use async_trait::async_trait;

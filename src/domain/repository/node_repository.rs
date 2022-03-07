@@ -1,5 +1,5 @@
 use super::RepositoryResult;
-use crate::domain::node::Node;
+use crate::domain::models::Node;
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

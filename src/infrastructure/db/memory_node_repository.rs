@@ -1,5 +1,5 @@
 use crate::domain::{
-    node::Node,
+    models::Node,
     repository::{
         node_repository::{NodeFilter, NodeRepository},
         RepositoryError, RepositoryResult,

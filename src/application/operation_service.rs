@@ -1,5 +1,5 @@
 use crate::domain::{
-    operation::{Operation, OperationType},
+    models::{Operation, OperationType},
     repository::{NodeRepository, OperationRepository, RepositoryError},
 };
 use thiserror::Error;

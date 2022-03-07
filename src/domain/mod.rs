@@ -1,4 +1,2 @@
-pub mod cluster;
-pub mod node;
-pub mod operation;
+pub mod models;
 pub mod repository;

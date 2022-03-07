@@ -1,5 +1,5 @@
 use crate::{
-    domain::{cluster::Cluster, repository::ClusterRepository},
+    domain::{models::Cluster, repository::ClusterRepository},
     infrastructure::auth,
 };
 use actix_web::{

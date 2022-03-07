@@ -1,5 +1,5 @@
 use crate::domain::{
-    operation::Operation,
+    models::Operation,
     repository::{OperationRepository, RepositoryError, RepositoryResult},
 };
 use async_trait::async_trait;
