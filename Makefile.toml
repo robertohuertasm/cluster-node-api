@@ -8,6 +8,10 @@ install_crate = "cargo-watch"
 command = "cargo"
 args = ["watch", "-x", "run --release"]
 
+[tasks.start]
+command = "cargo"
+args = ["run",  "--release"]
+
 [tasks.db-init]
 dependencies = ["db-start", "db-create", "db-migration-run"]
 

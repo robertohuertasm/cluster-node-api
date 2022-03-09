@@ -1,5 +1,97 @@
 # Cluster Node API
 
-Pending some exhaustive tests
-Pending transaction in operations (some different ways to act in there)
+This is simple REST API that emulates the management of nodes of computing clusters.
 
+## Setting up the project
+
+### Rust
+
+The project is written in [Rust](https://www.rust-lang.org/). Follow [these instructions](https://www.rust-lang.org/tools/install) to install it.
+
+Once you have installed [Rust](https://www.rust-lang.org/), please run this command to install [cargo-make](https://github.com/sagiegurari/cargo-make), which is just a task runner that will help us to set up the database and run the API.
+
+```sh
+cargo install --force cargo-make
+```
+
+I chose to use [Rust](https://www.rust-lang.org/) because it's a language I feel comfortable with. Considering that this was just an exercise, I didn't have into account other kind of considerations like, for instance, the fact that the rest of the team might not be comfortable using/learning it, the complexity of hiring new Rust developers...
+
+### PostgreSQL
+
+I've used [PostgreSQL](https://www.postgresql.org/) as a database to emulate the state of the cluster. In order to ease the development, I've leveraged [Docker](https://www.docker.com/) to run the database but you can use your own instance if you want.
+
+Note that the database connection is already configured in the `.env` file. If you're using your own Postgres instance, you can change the `DATABASE_URL` value in the `.env` file or just set it as an environment variable.
+
+In this case, I chose to use [PostgreSQL](https://www.postgresql.org/) because it's quite flexible to work with but I guess there were many options here that could have also worked well. In the end, given that there were other options I just chose the one I felt comfortable with.
+
+
+## Starting the API
+
+If you want to go with the happy path, just run this:
+
+```sh
+## This will start a docker postges container, create the database and run the SQL migrations to set it up
+makers db-init
+## This will start the API in the port 8080 and in release mode
+makers start
+```
+
+Note that you can change the port by setting the `PORT` environment variable. Remember that you can use the `.env` file to set the environment variables, too. We're leveraging the [dotenv crate](https://docs.rs/dotenv/latest/dotenv/).
+
+## Development mode
+
+If you would like to run the API while develping it, you can run this:
+
+```sh
+makers dev
+```
+
+This will start the API in watch mode, so it will reload on eveyy file change and it will show the logs in colour in your terminal.
+
+
+## Testing
+
+I tried to cover most of the components of the API but given the time constraints I didn't have time to cover all the cases.
+
+You can run the tests by executing the following command:
+
+```sh
+cargo test
+```
+
+## Tracing
+
+I normally use to instrument the code I write so I can understand what's going on. The API has been instrumented using the [tracing](https://docs.rs/tracing/0.1.31/tracing/) crate.
+
+In order to enable it, you can set the env var `RUST_LOG` to `cluster_node_api=debug`. You can change the level of log by changing the `debug` to `trace`, `info`, `warn` or `error`. Likewise, if you want to get information about other crates, just remove the `cluster_node_api` from the env var: `RUST_LOG=debug`.
+
+## Architecture
+
+The idea was to provide a clean architecture so we have a clear separation of concerns while keeping loose coupling between the different components. This generally has the side effect of simplifying the testing, too.
+
+The entry point of the API is the `main.rs` file. Here, we set up all the dependencies and start the api.
+
+We have 3 separated layers:
+
+1. Infrastructure: Responsible for the data storage, authorization middleware and api controllers.
+2. Application: Responsible for the business logic.
+3. Domain: Responsible for the high level data object that we use.
+
+The direction of coupling goes from 1 to 3. 
+
+In order to maintain the loose coupling, we're leveraging [traits](https://doc.rust-lang.org/book/ch10-02-traits.html) to define the interface between the different layers.
+
+Take into account, that given that the majority of the API are CRUD operations, the `application` layer is quite minimal. Indeed, I've just created a service for the `commands API` (which I called `operation`) just for the sake of the example, but normally, adding this layer when there's no need of business logic just adds extra complexity.
+
+TODO: add diagram here.
+
+## API endpoints
+
+TODO:
+## Dependencies
+
+TODO: Talk about some of the dependencies that I've used.
+
+## Open API and further improvements
+
+TODO:
