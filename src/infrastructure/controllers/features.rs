@@ -4,6 +4,11 @@ use actix_web::{
 };
 use tracing::instrument;
 
+const FEAT_1: &'static str = "Search by node name or cluster name";
+const FEAT_2: &'static str = "Manage clusters";
+const FEAT_3: &'static str = "Manage nodes";
+const FEAT_4: &'static str = "Create node commands";
+
 #[instrument(skip(cfg), level = "trace")]
 pub fn configuration(cfg: &mut ServiceConfig) {
     cfg.route("/v1/features", web::get().to(features));
@@ -11,7 +16,7 @@ pub fn configuration(cfg: &mut ServiceConfig) {
 
 #[instrument]
 async fn features() -> HttpResponse {
-    HttpResponse::Ok().json(vec!["Feature 1", "Feature 2"])
+    HttpResponse::Ok().json(vec![FEAT_1, FEAT_2, FEAT_3, FEAT_4])
 }
 
 #[cfg(test)]
@@ -26,7 +31,7 @@ mod tests {
         assert_eq!(res.status(), StatusCode::OK);
         let body = res.into_body().try_into_bytes().unwrap();
         let features = serde_json::from_slice::<'_, Vec<&str>>(&body).ok().unwrap();
-        assert_eq!(features, vec!["Feature 1", "Feature 2"]);
+        assert_eq!(features, vec![FEAT_1, FEAT_2, FEAT_3, FEAT_4]);
     }
 
     #[actix_rt::test]
@@ -41,6 +46,6 @@ mod tests {
         assert_eq!(res.status(), StatusCode::OK);
         let body = res.into_body().try_into_bytes().unwrap();
         let features = serde_json::from_slice::<'_, Vec<&str>>(&body).ok().unwrap();
-        assert_eq!(features, vec!["Feature 1", "Feature 2"]);
+        assert_eq!(features, vec![FEAT_1, FEAT_2, FEAT_3, FEAT_4]);
     }
 }
