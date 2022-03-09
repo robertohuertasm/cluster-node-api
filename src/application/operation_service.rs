@@ -65,4 +65,17 @@ where
             OperationServiceError::NodeNotFound(node_id.to_owned())
         })
     }
+
+    #[instrument(skip(self))]
+    pub async fn power_on_without_operation(
+        &self,
+        node_id: &Uuid,
+    ) -> Result<Node, OperationServiceError> {
+        let mut node = self.node_check(node_id).await?;
+        node.status = crate::domain::models::NodeStatus::PowerOn;
+        self.node_repository
+            .update_node(&node)
+            .await
+            .map_err(|e| OperationServiceError::RepositoryError(e))
+    }
 }

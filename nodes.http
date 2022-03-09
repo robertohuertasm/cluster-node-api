@@ -26,36 +26,6 @@ Authorization: {{token}}
     "node_id": "356e42a8-e659-406f-98bb-6124414675e8"
 }
 
-### update node status to off
-PATCH http://localhost:8080/v1/nodes HTTP/1.1
-Content-Type: application/json
-Authorization: {{token}}
-
-{    
-    "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "status": "poweroff"
-}
-
-### update node status to on
-PATCH http://localhost:8080/v1/nodes HTTP/1.1
-Content-Type: application/json
-Authorization: {{token}}
-
-{    
-    "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "status": "poweron"
-}
-
-### update node status to rebooting
-PATCH http://localhost:8080/v1/nodes HTTP/1.1
-Content-Type: application/json
-Authorization: {{token}}
-
-{    
-    "id": "356e42a8-e659-406f-98bb-6124414675e8",
-    "status": "rebooting"
-}
-
 ### get nodes
 GET http://localhost:8080/v1/nodes HTTP/1.1
 Authorization: {{token}}

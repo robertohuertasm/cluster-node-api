@@ -56,11 +56,21 @@ async fn post_reboot<R: NodeRepository>(
     node_id: web::Json<Uuid>,
     svc: web::Data<OperationService<R>>,
 ) -> HttpResponse {
-    to_response(svc.reboot(&node_id).await)
+    let r = svc.reboot(&node_id).await;
+    // start a new thread to simulate poweron in a few seconds
+    actix_web::rt::spawn(async move {
+        actix_web::rt::time::sleep(std::time::Duration::from_secs(5)).await;
+        if let Err(e) = svc.power_on_without_operation(&node_id).await {
+            tracing::error!("Error powering on after rebooting: {:?}", e);
+        }
+    });
+    to_response(r)
 }
 
 #[cfg(test)]
 mod tests {
+
+    use std::time::Duration;
 
     use crate::domain::{
         models::{Node, NodeStatus, Operation, OperationType},
@@ -154,8 +164,26 @@ mod tests {
 
     #[actix_rt::test]
     async fn reboot_works() {
+        let mut node_repo = MockNodeRepository::default();
+
         let node_id = uuid::Uuid::new_v4();
-        let svc = prepare_operation_svc();
+
+        node_repo.expect_get_node().times(2).returning(move |id| {
+            let node = create_test_node(*id, "my_node".to_string());
+            Ok(node)
+        });
+
+        node_repo
+            .expect_update_node()
+            .once()
+            .returning(|node| Ok(node.clone()));
+
+        node_repo
+            .expect_create_operation()
+            .once()
+            .returning(|op| Ok(op.clone()));
+
+        let svc = OperationService::new(node_repo);
         let res = post_reboot(web::Json(node_id), web::Data::new(svc)).await;
 
         let body = res.into_body().try_into_bytes().unwrap();
@@ -163,6 +191,9 @@ mod tests {
 
         assert_eq!(operation.node_id, node_id);
         assert_eq!(operation.operation_type, OperationType::Reboot);
+
+        // waiting >5 secs to check that the node is set to power on
+        actix_rt::time::sleep(Duration::from_secs(6)).await;
     }
 
     #[actix_rt::test]

@@ -29,8 +29,6 @@ pub fn configuration<R: NodeRepository>(cfg: &mut ServiceConfig) {
             .route("/{node_id}", web::get().to(get::<R>))
             // POST
             .route("", web::post().to(post::<R>))
-            // PATCH
-            .route("", web::patch().to(patch_status::<R>))
             // PUT
             .route("", web::put().to(put::<R>))
             // DELETE
@@ -70,25 +68,6 @@ async fn post<R: NodeRepository>(node: web::Json<Node>, repo: web::Data<R>) -> H
     match repo.create_node(&node).await {
         Ok(node) => HttpResponse::Created().json(node),
         Err(e) => HttpResponse::InternalServerError().body(format!("Something went wrong: {}", e)),
-    }
-}
-
-#[instrument(skip(repo))]
-async fn patch_status<R: NodeRepository>(
-    node: web::Json<NodePatchDTO>,
-    repo: web::Data<R>,
-) -> HttpResponse {
-    let old_node = repo.get_node(&node.id).await;
-
-    match old_node {
-        Ok(mut old) => {
-            old.status = node.status;
-            match repo.update_node(&old).await {
-                Ok(node) => HttpResponse::Ok().json(node),
-                Err(e) => HttpResponse::NotFound().body(format!("Something went wrong: {}", e)),
-            }
-        }
-        Err(e) => HttpResponse::NotFound().body(format!("Something went wrong: {}", e)),
     }
 }
 
