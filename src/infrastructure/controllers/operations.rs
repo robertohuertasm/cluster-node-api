@@ -84,15 +84,18 @@ mod tests {
 
     fn prepare_operation_svc() -> OperationService<MockNodeRepository> {
         let mut node_repo = MockNodeRepository::default();
-        node_repo.expect_get_node().once().returning(move |id| {
+        node_repo.expect_get_node().returning(move |id| {
             let node = create_test_node(*id, "my_node".to_string());
             Ok(node)
         });
 
         node_repo
             .expect_update_node()
-            .once()
             .returning(|node| Ok(node.clone()));
+
+        node_repo
+            .expect_create_operation()
+            .returning(|op| Ok(op.clone()));
 
         OperationService::new(node_repo)
     }
