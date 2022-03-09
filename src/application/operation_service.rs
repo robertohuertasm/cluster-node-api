@@ -1,5 +1,5 @@
 use crate::domain::{
-    models::{Node, NodeStatus, Operation, OperationType},
+    models::{Node, Operation, OperationType},
     repository::{NodeRepository, OperationRepository, RepositoryError},
 };
 use thiserror::Error;
@@ -56,20 +56,12 @@ where
         node_id: &Uuid,
         operation_type: OperationType,
     ) -> OperationServiceResult {
-        let mut node = self.node_check(node_id).await?;
-        // TODO: ideally, this should be transactional
+        self.node_check(node_id).await?;
         let operation = Operation::new(node_id.to_owned(), operation_type);
         let operation = self
             .operation_repository
             .create_operation(&operation)
             .await?;
-
-        node.status = match operation_type {
-            OperationType::PowerOn => NodeStatus::PowerOn,
-            OperationType::PowerOff => NodeStatus::PowerOff,
-            OperationType::Reboot => NodeStatus::Rebooting,
-        };
-        self.node_repository.update_node(&node).await?;
         Ok(operation)
     }
 
