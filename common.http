@@ -2,4 +2,4 @@
 GET http://localhost:8080/health HTTP/1.1
 
 ### features
-GET http://localhost:8080/features HTTP/1.1
+GET http://localhost:8080/v1/features HTTP/1.1

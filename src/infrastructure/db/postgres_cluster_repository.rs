@@ -51,7 +51,7 @@ impl ClusterRepository for PostgresClusterRepository {
 
         result.map_err(|e| {
             tracing::error!("{:?}", e);
-            RepositoryError::InvalidId
+            e.into()
         })
     }
 

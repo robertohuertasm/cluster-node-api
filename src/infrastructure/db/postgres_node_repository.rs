@@ -50,7 +50,7 @@ impl NodeRepository for PostgresNodeRepository {
 
         result.map_err(|e| {
             tracing::error!("{:?}", e);
-            RepositoryError::Generic(Box::new(e))
+            e.into()
         })
     }
 

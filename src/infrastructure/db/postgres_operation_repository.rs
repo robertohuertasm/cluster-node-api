@@ -1,6 +1,6 @@
 use crate::domain::{
     models::Operation,
-    repository::{OperationRepository, RepositoryError, RepositoryResult},
+    repository::{OperationRepository, RepositoryResult},
 };
 use async_trait::async_trait;
 use tracing::instrument;
@@ -42,7 +42,7 @@ impl OperationRepository for PostgresOperationRepository {
 
         result.map_err(|e| {
             tracing::error!("{:?}", e);
-            RepositoryError::AlreadyExists
+            e.into()
         })
     }
 }

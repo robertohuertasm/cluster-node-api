@@ -61,7 +61,7 @@ GET http://localhost:8080/v1/nodes HTTP/1.1
 Authorization: {{token}}
 
 ### get nodes filtered by name
-GET http://localhost:8080/v1/node?name=nodes HTTP/1.1
+GET http://localhost:8080/v1/nodes?name=node HTTP/1.1
 Authorization: {{token}}
 
 ### get node
