@@ -6,7 +6,7 @@ use crate::{
     application::operation_service::OperationService,
     infrastructure::{
         controllers,
-        db::{PostgresClusterRepository, PostgresNodeRepository, PostgresOperationRepository},
+        db::{PostgresClusterRepository, PostgresNodeRepository},
     },
 };
 use actix_cors::Cors;
@@ -37,10 +37,9 @@ async fn main() -> std::io::Result<()> {
     // pool uses arc internally so it can be cloned without any impact
     let cluster_repo = PostgresClusterRepository::new(pool.clone());
     let node_repo = PostgresNodeRepository::new(pool.clone());
-    let ops_repo = PostgresOperationRepository::new(pool.clone());
 
     // application services
-    let ops_svc = OperationService::new(node_repo.clone(), ops_repo.clone());
+    let ops_svc = OperationService::new(node_repo.clone());
 
     let cluster_repo = web::Data::new(cluster_repo);
     let node_repo = web::Data::new(node_repo);
@@ -63,12 +62,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(ops_svc.clone())
             .configure(controllers::clusters::configuration::<PostgresClusterRepository>)
             .configure(controllers::nodes::configuration::<PostgresNodeRepository>)
-            .configure(
-                controllers::operations::configuration::<
-                    PostgresNodeRepository,
-                    PostgresOperationRepository,
-                >,
-            )
+            .configure(controllers::operations::configuration::<PostgresNodeRepository>)
             .configure(controllers::health::configuration)
             .configure(controllers::features::configuration)
     })

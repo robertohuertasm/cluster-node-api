@@ -1,5 +1,5 @@
 use super::RepositoryResult;
-use crate::domain::models::Node;
+use crate::domain::models::{Node, Operation};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -17,4 +17,5 @@ pub trait NodeRepository: Send + Sync + 'static {
     async fn create_node(&self, node: &Node) -> RepositoryResult<Node>;
     async fn update_node(&self, node: &Node) -> RepositoryResult<Node>;
     async fn delete_node(&self, node_id: &Uuid) -> RepositoryResult<Uuid>;
+    async fn create_operation(&self, operation: &Operation) -> RepositoryResult<Operation>;
 }

@@ -1,6 +1,6 @@
 use crate::domain::{
     models::{Node, Operation, OperationType},
-    repository::{NodeRepository, OperationRepository, RepositoryError},
+    repository::{NodeRepository, RepositoryError},
 };
 use thiserror::Error;
 use tracing::instrument;
@@ -17,21 +17,16 @@ pub enum OperationServiceError {
 pub type OperationServiceResult = Result<Operation, OperationServiceError>;
 
 #[derive(Debug, Clone)]
-pub struct OperationService<N: NodeRepository, O: OperationRepository> {
+pub struct OperationService<N: NodeRepository> {
     node_repository: N,
-    operation_repository: O,
 }
 
-impl<N, O> OperationService<N, O>
+impl<N> OperationService<N>
 where
     N: NodeRepository,
-    O: OperationRepository,
 {
-    pub fn new(node_repository: N, operation_repository: O) -> Self {
-        Self {
-            node_repository,
-            operation_repository,
-        }
+    pub fn new(node_repository: N) -> Self {
+        Self { node_repository }
     }
 
     #[instrument(skip(self))]
@@ -58,10 +53,7 @@ where
     ) -> OperationServiceResult {
         self.node_check(node_id).await?;
         let operation = Operation::new(node_id.to_owned(), operation_type);
-        let operation = self
-            .operation_repository
-            .create_operation(&operation)
-            .await?;
+        let operation = self.node_repository.create_operation(&operation).await?;
         Ok(operation)
     }
 

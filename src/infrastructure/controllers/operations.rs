@@ -1,6 +1,6 @@
 use crate::{
     application::operation_service::{OperationService, OperationServiceResult},
-    domain::repository::{NodeRepository, OperationRepository},
+    domain::repository::NodeRepository,
     infrastructure::auth,
 };
 use actix_web::{
@@ -16,19 +16,15 @@ use super::path_config_handler;
 
 const PATH: &str = "/v1/operations";
 
-pub fn configuration<N, R>(cfg: &mut ServiceConfig)
-where
-    N: NodeRepository,
-    R: OperationRepository,
-{
+pub fn configuration<R: NodeRepository>(cfg: &mut ServiceConfig) {
     cfg.service(
         web::scope(PATH)
             .wrap(HttpAuthentication::bearer(auth::validator))
             .app_data(PathConfig::default().error_handler(path_config_handler))
             // POST
-            .route("/poweron", web::post().to(post_poweron::<N, R>))
-            .route("/poweroff", web::post().to(post_poweroff::<N, R>))
-            .route("/reboot", web::post().to(post_reboot::<N, R>)),
+            .route("/poweron", web::post().to(post_poweron::<R>))
+            .route("/poweroff", web::post().to(post_poweroff::<R>))
+            .route("/reboot", web::post().to(post_reboot::<R>)),
     );
 }
 
@@ -40,25 +36,25 @@ fn to_response(operation_result: OperationServiceResult) -> HttpResponse {
 }
 
 #[instrument(skip(svc))]
-async fn post_poweron<N: NodeRepository, R: OperationRepository>(
+async fn post_poweron<R: NodeRepository>(
     node_id: web::Json<Uuid>,
-    svc: web::Data<OperationService<N, R>>,
+    svc: web::Data<OperationService<R>>,
 ) -> HttpResponse {
     to_response(svc.power_on(&node_id).await)
 }
 
 #[instrument(skip(svc))]
-async fn post_poweroff<N: NodeRepository, R: OperationRepository>(
+async fn post_poweroff<R: NodeRepository>(
     node_id: web::Json<Uuid>,
-    svc: web::Data<OperationService<N, R>>,
+    svc: web::Data<OperationService<R>>,
 ) -> HttpResponse {
     to_response(svc.power_off(&node_id).await)
 }
 
 #[instrument(skip(svc))]
-async fn post_reboot<N: NodeRepository, R: OperationRepository>(
+async fn post_reboot<R: NodeRepository>(
     node_id: web::Json<Uuid>,
-    svc: web::Data<OperationService<N, R>>,
+    svc: web::Data<OperationService<R>>,
 ) -> HttpResponse {
     to_response(svc.reboot(&node_id).await)
 }
@@ -68,10 +64,7 @@ mod tests {
 
     use crate::domain::{
         models::{Node, NodeStatus, Operation, OperationType},
-        repository::{
-            node_repository::MockNodeRepository, operation_repository::MockOperationRepository,
-            RepositoryError,
-        },
+        repository::{node_repository::MockNodeRepository, RepositoryError},
     };
 
     use super::*;
@@ -89,7 +82,7 @@ mod tests {
         }
     }
 
-    fn prepare_operation_svc() -> OperationService<MockNodeRepository, MockOperationRepository> {
+    fn prepare_operation_svc() -> OperationService<MockNodeRepository> {
         let mut node_repo = MockNodeRepository::default();
         node_repo.expect_get_node().once().returning(move |id| {
             let node = create_test_node(*id, "my_node".to_string());
@@ -101,25 +94,17 @@ mod tests {
             .once()
             .returning(|node| Ok(node.clone()));
 
-        let mut ops_repo = MockOperationRepository::default();
-        ops_repo
-            .expect_create_operation()
-            .returning(|op| Ok(op.clone()));
-
-        OperationService::new(node_repo, ops_repo)
+        OperationService::new(node_repo)
     }
 
-    fn prepare_operation_svc_with_error(
-    ) -> OperationService<MockNodeRepository, MockOperationRepository> {
+    fn prepare_operation_svc_with_error() -> OperationService<MockNodeRepository> {
         let mut node_repo = MockNodeRepository::default();
         node_repo
             .expect_get_node()
             .once()
             .returning(|_| Err(RepositoryError::DoesNotExist));
 
-        let ops_repo = MockOperationRepository::default();
-
-        OperationService::new(node_repo, ops_repo)
+        OperationService::new(node_repo)
     }
 
     #[actix_rt::test]
