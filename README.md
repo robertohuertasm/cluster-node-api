@@ -83,15 +83,32 @@ In order to maintain the loose coupling, we're leveraging [traits](https://doc.r
 
 Take into account, that given that the majority of the API are CRUD operations, the `application` layer is quite minimal. Indeed, I've just created a service for the `commands API` (which I called `operation`) just for the sake of the example, but normally, adding this layer when there's no need of business logic just adds extra complexity.
 
-TODO: add diagram here.
+![architecture](/docs/architecture.png)
 
 ## API endpoints
 
-TODO:
-## Dependencies
+The API has several endpoints:
 
-TODO: Talk about some of the dependencies that I've used.
+- /healh: GET. This endpoint is used to check if the API is running.
+- /v1/features: GET
+- /v1/clusters: GET, POST, PUT and DELETE
+- /v1/nodes: GET, POST, PUT and DELETE. The GET endpoint accepts a query param called `name` to filter the nodes by node name or cluster name.
+- /v1/operations/poweron: POST
+- /v1/operations/poweroff: POST
+- /v1/operations/reboot: POST
 
-## Open API and further improvements
+You can find more details about this endpoints in the files located in the [http folder](/http).
 
-TODO:
+If you use [vscode](https://code.visualstudio.com/),and have the [REST Client extension](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) installed, you can use it to test the API with the previous files.
+
+## Authorization
+
+Note that the only endpoints that are accesible without any kind of authorization are the `/health` and `/v1/features` endpoints.
+
+The rest of endpoints need a simple token. The token is passed as a header with the name `Authorization` and the value is `Bearer im_a_valid_user`.
+
+If this token is not present or is invalid, the API will return a 401 error.
+
+## Open API
+
+Aside from other improvements, I could imagine expanding the documentation of this API by providing [OPEN API](https://github.com/OAI/OpenAPI-Specification/) support.
