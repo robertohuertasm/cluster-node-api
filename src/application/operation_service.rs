@@ -76,6 +76,6 @@ where
         self.node_repository
             .update_node(&node)
             .await
-            .map_err(|e| OperationServiceError::RepositoryError(e))
+            .map_err(OperationServiceError::RepositoryError)
     }
 }

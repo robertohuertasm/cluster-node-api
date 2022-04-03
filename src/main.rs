@@ -46,7 +46,7 @@ async fn main() -> std::io::Result<()> {
     let ops_svc = web::Data::new(ops_svc);
 
     // building address
-    let port = std::env::var("PORT").unwrap_or("8080".to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8080".to_string());
     let address = format!("127.0.0.1:{}", port);
     // building shared state
     tracing::debug!("Starting our server at {}", address);

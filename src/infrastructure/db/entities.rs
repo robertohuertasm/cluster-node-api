@@ -45,18 +45,6 @@ pub struct DbOperation {
     pub updated_at: Option<DateTime<Utc>>,
 }
 
-impl DbOperation {
-    pub fn new(node_id: Uuid, operation_type: DbOperationType) -> Self {
-        Self {
-            id: Uuid::new_v4(),
-            node_id,
-            operation_type,
-            created_at: None,
-            updated_at: None,
-        }
-    }
-}
-
 impl From<Operation> for DbOperation {
     fn from(op: Operation) -> Self {
         Self {

@@ -4,10 +4,10 @@ use actix_web::{
 };
 use tracing::instrument;
 
-const FEAT_1: &'static str = "Search by node name or cluster name";
-const FEAT_2: &'static str = "Manage clusters";
-const FEAT_3: &'static str = "Manage nodes";
-const FEAT_4: &'static str = "Create node commands";
+const FEAT_1: &str = "Search by node name or cluster name";
+const FEAT_2: &str = "Manage clusters";
+const FEAT_3: &str = "Manage nodes";
+const FEAT_4: &str = "Create node commands";
 
 #[instrument(skip(cfg), level = "trace")]
 pub fn configuration(cfg: &mut ServiceConfig) {

@@ -11,11 +11,7 @@ pub async fn validator(
     if credentials.token() == "im_a_valid_user" {
         Ok(req)
     } else {
-        let config = req
-            .app_data::<Config>()
-            .map(|data| data.clone())
-            .unwrap_or_else(Default::default);
-
+        let config = req.app_data::<Config>().cloned().unwrap_or_default();
         let error = AuthenticationError::from(config).with_error_description("Wrong Bearer token");
         tracing::warn!(
             "Trying to access a resource with wrong authorization token. Path: {}",

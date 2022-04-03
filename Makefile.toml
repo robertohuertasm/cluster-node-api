@@ -44,7 +44,25 @@ install_crate = "sqlx-cli"
 command = "sqlx"
 args = ["migrate", "run"]
 
-
-
 [tasks.db-reset]
 dependencies = ["db-clear", "db-init"]
+
+[tasks.clippy-z]
+clear = true
+workspace = false
+install_crate = "cargo-clippy"
+toolchain = "nightly"
+command = "cargo"
+args = ["clippy", "-Z", "unstable-options"]
+
+[tasks.clippy]
+workspace = false
+install_crate = "cargo-clippy"
+command = "cargo"
+args = ["clippy"]
+
+[tasks.clippy-pedantic]
+workspace = false
+install_crate = "cargo-clippy"
+command = "cargo"
+args = ["clippy", "--all", "--", "-D", "clippy::pedantic", "-D", "clippy::nursery", "-D", "warnings"]
