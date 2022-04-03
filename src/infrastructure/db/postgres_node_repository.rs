@@ -1,11 +1,19 @@
-use crate::domain::{
-    models::{Node, NodeStatus, Operation, OperationType},
-    repository::{node_repository::NodeFilter, NodeRepository, RepositoryError, RepositoryResult},
+use crate::{
+    domain::{
+        models::{Node, Operation, OperationType},
+        repository::{
+            node_repository::NodeFilter, NodeRepository, RepositoryError, RepositoryResult,
+        },
+    },
+    infrastructure::db::entities::DbNode,
+    infrastructure::db::entities::DbOperation,
 };
 use async_trait::async_trait;
 use chrono::Utc;
 use tracing::instrument;
 use uuid::Uuid;
+
+use super::entities::{DbNodeStatus, DbOperationType};
 
 pub struct PostgresNodeRepository {
     pool: sqlx::PgPool,
@@ -30,8 +38,7 @@ impl NodeRepository for PostgresNodeRepository {
     #[instrument(skip(self))]
     async fn get_nodes(&self, filter: Option<NodeFilter>) -> RepositoryResult<Vec<Node>> {
         let query = if let Some(filter) = filter {
-            tracing::error!("FILTER {:?}", filter);
-            sqlx::query_as::<_, Node>(
+            sqlx::query_as::<_, DbNode>(
                 r"
                 SELECT n.id, n.name, n.status, n.cluster_id, n.created_at, n.updated_at
                 FROM nodes n
@@ -41,29 +48,31 @@ impl NodeRepository for PostgresNodeRepository {
             )
             .bind(format!("%{}%", filter.name))
         } else {
-            sqlx::query_as::<_, Node>(
+            sqlx::query_as::<_, DbNode>(
                 "SELECT id, name, status, cluster_id, created_at, updated_at FROM nodes",
             )
         };
 
         let result = query.fetch_all(&self.pool).await;
 
-        result.map_err(|e| {
-            tracing::error!("{:?}", e);
-            e.into()
-        })
+        result
+            .map(|x| x.into_iter().map(|x| x.into()).collect())
+            .map_err(|e| {
+                tracing::error!("{:?}", e);
+                e.into()
+            })
     }
 
     #[instrument(skip(self))]
     async fn get_node(&self, node_id: &uuid::Uuid) -> RepositoryResult<Node> {
-        let result = sqlx::query_as::<_, Node>(
+        let result = sqlx::query_as::<_, DbNode>(
             "SELECT id, name, status, cluster_id, created_at, updated_at FROM nodes WHERE id = $1",
         )
         .bind(node_id)
         .fetch_one(&self.pool)
         .await;
 
-        result.map_err(|e| {
+        result.map(|x| x.into()).map_err(|e| {
             tracing::error!("{:?}", e);
             RepositoryError::InvalidId
         })
@@ -71,7 +80,8 @@ impl NodeRepository for PostgresNodeRepository {
 
     #[instrument(skip(self))]
     async fn create_node(&self, node: &Node) -> RepositoryResult<Node> {
-        let result = sqlx::query_as::<_, Node>(
+        let db_status: DbNodeStatus = node.status.into();
+        let result = sqlx::query_as::<_, DbNode>(
             r#"
         INSERT INTO nodes (id, name, status, cluster_id)
         VALUES ($1, $2, $3, $4)
@@ -80,12 +90,12 @@ impl NodeRepository for PostgresNodeRepository {
         )
         .bind(&node.id)
         .bind(&node.name)
-        .bind(&node.status)
+        .bind(db_status)
         .bind(&node.cluster_id)
         .fetch_one(&self.pool)
         .await;
 
-        result.map_err(|e| {
+        result.map(|x| x.into()).map_err(|e| {
             tracing::error!("{:?}", e);
             RepositoryError::AlreadyExists
         })
@@ -93,7 +103,8 @@ impl NodeRepository for PostgresNodeRepository {
 
     #[instrument(skip(self))]
     async fn update_node(&self, node: &Node) -> RepositoryResult<Node> {
-        let result = sqlx::query_as::<_, Node>(
+        let db_status: DbNodeStatus = node.status.into();
+        let result = sqlx::query_as::<_, DbNode>(
             r#"
             UPDATE nodes
             SET name = $1, status = $2, cluster_id = $3, updated_at = $4
@@ -102,14 +113,14 @@ impl NodeRepository for PostgresNodeRepository {
         "#,
         )
         .bind(&node.name)
-        .bind(&node.status)
+        .bind(db_status)
         .bind(&node.cluster_id)
         .bind(Utc::now())
         .bind(&node.id)
         .fetch_one(&self.pool)
         .await;
 
-        result.map_err(|e| {
+        result.map(|x| x.into()).map_err(|e| {
             tracing::error!("{:?}", e);
             RepositoryError::DoesNotExist
         })
@@ -117,7 +128,7 @@ impl NodeRepository for PostgresNodeRepository {
 
     #[instrument(skip(self), err)]
     async fn delete_node(&self, node_id: &Uuid) -> RepositoryResult<Uuid> {
-        let result = sqlx::query_as::<_, Node>(
+        let result = sqlx::query_as::<_, DbNode>(
             r#"
             DELETE FROM nodes
             WHERE id = $1
@@ -137,14 +148,16 @@ impl NodeRepository for PostgresNodeRepository {
     #[instrument(skip(self))]
     async fn create_operation(&self, operation: &Operation) -> RepositoryResult<Operation> {
         let node_status = match operation.operation_type {
-            OperationType::PowerOn => NodeStatus::PowerOn,
-            OperationType::PowerOff => NodeStatus::PowerOff,
-            OperationType::Reboot => NodeStatus::Rebooting,
+            OperationType::PowerOn => DbNodeStatus::PowerOn,
+            OperationType::PowerOff => DbNodeStatus::PowerOff,
+            OperationType::Reboot => DbNodeStatus::Rebooting,
         };
+
+        let db_opt_type: DbOperationType = operation.operation_type.into();
 
         let mut tx = self.pool.begin().await?;
 
-        let insert_op = sqlx::query_as::<_, Operation>(
+        let insert_op = sqlx::query_as::<_, DbOperation>(
             r#"
         INSERT INTO operations (id, operation_type, node_id)
         VALUES ($1, $2, $3)
@@ -152,7 +165,7 @@ impl NodeRepository for PostgresNodeRepository {
         "#,
         )
         .bind(&operation.id)
-        .bind(&operation.operation_type)
+        .bind(db_opt_type)
         .bind(&operation.node_id)
         .fetch_one(&mut tx)
         .await;
@@ -176,7 +189,7 @@ impl NodeRepository for PostgresNodeRepository {
                     return Err(e.into());
                 }
                 tx.commit().await?;
-                Ok(o)
+                Ok(o.into())
             }
             Err(e) => {
                 tracing::error!("Error creating operation: {:?}", e);

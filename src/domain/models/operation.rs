@@ -1,10 +1,8 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 use uuid::Uuid;
 
-#[derive(Debug, Copy, Clone, Deserialize, Serialize, sqlx::Type, PartialEq, Eq)]
-#[sqlx(type_name = "operation_type", rename_all = "lowercase")]
+#[derive(Debug, Copy, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub enum OperationType {
     #[serde(rename = "poweron")]
     PowerOn,
@@ -14,7 +12,7 @@ pub enum OperationType {
     Reboot,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, FromRow, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct Operation {
     pub id: Uuid,
     pub node_id: Uuid,

@@ -74,10 +74,10 @@ The entry point of the API is the `main.rs` file. Here, we set up all the depend
 We have 3 separated layers:
 
 1. Infrastructure: Responsible for the data storage, authorization middleware and api controllers.
-2. Application: Responsible for the business logic.
-3. Domain: Responsible for the high level data object that we use.
+2. Application: Responsible for orchestration logic.
+3. Domain: Responsible for the high level data objects that we use.
 
-The direction of coupling goes from 1 to 3. 
+The direction of coupling goes from 1 to 3.
 
 In order to maintain the loose coupling, we're leveraging [traits](https://doc.rust-lang.org/book/ch10-02-traits.html) to define the interface between the different layers.
 

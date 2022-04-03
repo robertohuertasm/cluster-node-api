@@ -1,3 +1,4 @@
+mod entities;
 mod postgres_cluster_repository;
 mod postgres_node_repository;
 
